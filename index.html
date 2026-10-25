@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>КБЖУ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="КБЖУ">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#16a34a">
+<meta name="theme-color" content="#16a34a">
+<style>
+  :root {
+    --bg: #f4f4f5; --surface: #ffffff; --surface2: #f7f7f8; --border: #e5e5e7;
+    --text: #18181b; --text2: #6b7280; --muted: #9ca3af;
+    --accent: #16a34a; --accent-bg: #dcfce7; --warn: #d97706; --warn-bg: #fef3c7;
+    --over: #dc2626; --under: #ca8a04; --bal: #9333ea; --notify: #2563eb;
+    --col-p: rgba(34,197,94,0.12); --col-f: rgba(234,179,8,0.16); --col-c: rgba(59,130,246,0.10);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0b0c; --surface: #17181a; --surface2: #1e1f22; --border: #2b2c2f;
+      --text: #f4f4f5; --text2: #9ca3af; --muted: #71717a;
+      --accent: #22c55e; --accent-bg: #14532d; --warn: #f59e0b; --warn-bg: #451a03; --under: #facc15; --notify: #3b82f6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0b0c; --surface: #17181a; --surface2: #1e1f22; --border: #2b2c2f;
+    --text: #f4f4f5; --text2: #9ca3af; --muted: #71717a;
+    --accent: #22c55e; --accent-bg: #14532d; --warn: #f59e0b; --warn-bg: #451a03; --under: #facc15; --notify: #3b82f6;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  body { height: 100%; margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  * { box-sizing: border-box; }
+  #app { max-width: 420px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; background: var(--bg); }
+  .mode-switch { max-width: 420px; margin: 0 auto; display: flex; gap: 6px;
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px; background: var(--bg); }
+  .modebtn { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 12.5px; font-weight: 600;
+    background: var(--surface2); color: var(--text2); cursor: pointer; }
+  .modebtn.active { background: var(--accent); color: #fff; }
+  .screen { display: none; flex: 1; flex-direction: column; padding-bottom: 70px; }
+  .screen.active { display: flex; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+    border-bottom: 0.5px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 5;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+  .topbar .title { font-size: 15px; font-weight: 600; }
+  .icon-btn { background: none; border: none; font-size: 20px; color: var(--text2); cursor: pointer; padding: 4px 8px; }
+  .icon-btn.accent { color: var(--accent); }
+  .summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 14px 16px; background: var(--surface); border-bottom: 0.5px solid var(--border); text-align: center; }
+  .summary .stat-label { font-size: 11px; color: var(--text2); margin: 0; }
+  .summary .stat-val { font-size: 15px; font-weight: 600; margin: 2px 0 0; }
+  .summary .stat-val small { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .meal { padding: 10px 16px; border-bottom: 0.5px solid var(--border); background: var(--surface); }
+  .meal-head { display: flex; align-items: center; margin-bottom: 6px; }
+  .meal-head span.name { font-size: 13px; font-weight: 600; color: var(--text2); flex: 1; }
+  .meal-head span.mini-head { font-size: 10px; color: var(--muted); margin-right: 10px; }
+  .meal-head span.mini-head { font-size: 10px; color: var(--muted); margin-right: 10px; }
+  .item-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); padding: 3px 0; }
+  .bottomnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 420px;
+    display: flex; justify-content: space-around; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface); border-top: 0.5px solid var(--border); z-index: 10; }
+  .navitem { text-align: center; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 10px; position: relative; }
+  .nav-dot { display: none; position: absolute; top: -2px; left: calc(50% + 6px); width: 13px; height: 13px; border-radius: 50%;
+    background: var(--notify); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--notify); } /* синий с белым кольцом — отличается от красно-белой мишени 🎯 */
+  .nav-dot.show { display: block; }
+  .info-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 6px 0; border-bottom: 0.5px solid var(--border); text-align: left; }
+  .info-row span { color: var(--text2); }
+  .info-row b { text-align: right; font-weight: 600; }
+  .admin-btn { flex: 0 0 auto; padding: 6px 10px; border-radius: 8px; border: none; background: var(--surface2); color: var(--text2); font-size: 11.5px; font-weight: 600; cursor: pointer; }
+  .admin-btn.on { background: var(--accent); color: #fff; }
+  #cloud-indicator { flex: 1; font-size: 11px; align-self: center; padding: 4px 2px; }
+  .goals-banner { margin: 10px 16px 0; padding: 10px 12px; border-radius: 10px; background: var(--accent-bg); font-size: 13px; color: var(--text); }
+  .goals-banner b { color: var(--accent); }
+  .goals-banner .gb-list { margin-top: 4px; font-weight: 700; }
+  .prod-row.chg-row { background: var(--accent-bg); border-radius: 8px; padding-left: 8px; padding-right: 8px; }
+  .chg-old { color: var(--muted); text-decoration: line-through; font-size: 12px; font-weight: 400; }
+  .chg-new { color: var(--accent); font-weight: 700; }
+  .chg-delta { color: var(--accent); font-weight: 700; font-size: 11px; margin-left: 2px; }
+  .navitem .ic { font-size: 19px; display: block; }
+  .navitem.active { color: var(--accent); }
+  .list-pad { padding: 4px 16px; background: var(--surface); }
+  .prod-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .prod-row:last-child { border-bottom: none; }
+  .section-label { font-size: 11px; color: var(--text2); margin: 12px 0 4px; }
+  .chip { font-size: 12px; padding: 6px 12px; border-radius: 8px; border: 0.5px solid var(--border); color: var(--text2); cursor: pointer; background: var(--surface); }
+  .chip.on { background: var(--accent-bg); color: var(--accent); border-color: transparent; font-weight: 600; }
+  .chiprow { display: flex; gap: 8px; padding: 10px 16px; background: var(--surface); border-bottom: 0.5px solid var(--border); flex-wrap: wrap; }
+  .hint { font-size: 12px; color: var(--muted); padding: 0 16px 8px; background: var(--surface); margin: 0; }
+  .hint.warn { color: var(--warn); }
+  .btn-plus { background: none; border: none; color: var(--accent); font-size: 18px; cursor: pointer; }
+  .week-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 0.5px solid var(--border); background: var(--surface); gap: 10px; }
+  .week-row .day { font-size: 13px; width: 56px; color: var(--text2); }
+  .week-row .vals { font-size: 12px; color: var(--muted); flex: 1; }
+  .week-row .ic { font-size: 15px; }
+  .ok { color: var(--accent); } .bad { color: var(--warn); } .pending { color: var(--muted); }
+  .avg-box { padding: 12px 16px; background: var(--surface); border-bottom: 0.5px solid var(--border); }
+  .avg-box .lbl { font-size: 12px; color: var(--text2); margin: 0 0 8px; }
+  .wk-table { border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+  .wk-table th { text-align: center; padding: 4px 8px; color: var(--text2); font-weight: 600; }
+  .wk-table th:first-child, .wk-table th:nth-child(2), .wk-table td:first-child, .wk-table td:nth-child(2) { text-align: left; }
+  .wk-goalrow th { font-weight: 400; color: var(--muted); font-size: 10px; padding-top: 0; padding-bottom: 6px; }
+  .wk-table td { padding: 7px 8px; text-align: center; border-top: 0.5px solid var(--border); }
+  .wk-ic { width: 20px; text-align: center !important; }
+  .wk-sub { font-size: 10px; color: var(--muted); font-weight: 400; }
+  #modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100;
+    align-items:center; justify-content:center; padding:20px; }
+  #modal-overlay.show { display:flex; }
+  #modal-card { background:var(--surface); border-radius:14px; padding:18px; max-width:300px; width:100%; }
+  #modal-text { font-size:14px; margin:0 0 16px; color:var(--text); text-align:center; }
+  #modal-buttons { display:flex; gap:8px; }
+  .modal-btn { flex:1; padding:10px; border-radius:8px; border:0.5px solid var(--border); background:var(--surface2);
+    color:var(--text); font-size:13px; font-weight:600; cursor:pointer; }
+  .modal-btn.primary { background:var(--accent); color:#fff; border-color:transparent; }
+  .wk-day { color: var(--text2); }
+  .wk-over { color: var(--over); font-weight: 700; }
+  .wk-under { color: var(--under); font-weight: 700; }
+  .wk-bal { color: var(--bal); font-weight: 700; }
+  .wk-ok { color: var(--accent); font-weight: 700; }
+  .wk-cell.muted { color: var(--muted); }
+  .over-color { color: var(--over); font-weight: 700; }
+  .under-color { color: var(--under); font-weight: 700; }
+  .col-p { background: var(--col-p); }
+  .col-f { background: var(--col-f); }
+  .col-c { background: var(--col-c); }
+  .ktable { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; }
+  .ktable th { text-align: center; padding: 4px 8px; font-weight: 600; color: var(--text2); font-size: 11px; }
+  .ktable th:first-child, .ktable td:first-child { text-align: left; }
+  :root { --topbar-h: 52px; --cat-h: 26px; }
+  .cat-section { margin-bottom: 10px; }
+  .cat-table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; margin-top: 0; }
+  .list-pad.cat-section { padding-left: 8px; padding-right: 8px; }
+  .cat-table col.c-unit { width: 36px; }
+  .cat-table col.c-kcal { width: 46px; }
+  .cat-table col.c-mac { width: 44px; }
+  .cat-table td { padding: 7px 2px; font-size: 12.5px; }
+  .cat-table td:first-child { padding-left: 2px; text-align: left; line-height: 1.25; overflow-wrap: anywhere; }
+  .cat-table td:not(:first-child) { white-space: nowrap; font-variant-numeric: tabular-nums; } /* значения не переносятся, место отдано числам */
+  .cat-table thead th { white-space: nowrap; }
+  .cat-table thead th:first-child { white-space: normal; }
+  .cat-table thead th { position: sticky; z-index: 2; background-color: var(--surface); height: var(--cat-h); padding: 0 2px; font-size: 11px; font-weight: 600; color: var(--text2); }
+  .cat-table thead tr.cat-row th { top: calc(var(--topbar-h) - 1px); z-index: 3; background-color: var(--surface2); color: var(--text); font-size: 12.5px; text-align: left; padding-left: 8px; border-radius: 8px 8px 0 0; }
+  .cat-table thead tr.col-row th { top: calc(var(--topbar-h) - 1px + var(--cat-h)); border-bottom: 0.5px solid var(--border); }
+  .cat-table thead th.col-p { background-image: linear-gradient(var(--col-p), var(--col-p)); }
+  .cat-table thead th.col-f { background-image: linear-gradient(var(--col-f), var(--col-f)); }
+  .cat-table thead th.col-c { background-image: linear-gradient(var(--col-c), var(--col-c)); }
+  .ktable td { padding: 7px 8px; text-align: center; border-top: 0.5px solid var(--border); }
+  .ktable td.muted { color: var(--muted); }
+  .ktable .del-cell { width: 30px; padding: 0 4px !important; text-align: center; }
+  .del-btn { background: none; border: none; color: var(--muted); font-size: 18px; line-height: 1; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; }
+  .del-btn:hover, .del-btn:active { color: var(--over); background: var(--surface2); }
+  .day-table { table-layout: fixed; width: 100%; }
+  .day-table col.c-qty { width: 76px; }
+  .day-table col.c-mac { width: 34px; }
+  .day-table col.c-del { width: 28px; }
+  .day-table td { padding: 7px 2px; font-size: 12.5px; }
+  .day-table td:first-child { padding-left: 0; text-align: left; overflow-wrap: anywhere; line-height: 1.25; }
+  .day-table td.qty-cell { white-space: nowrap; text-align: right; }
+  .day-table .qty-unit { display: inline-block; width: 20px; text-align: left; padding-left: 3px; }
+  .day-table th { padding-left: 2px; padding-right: 2px; }
+  .inline-qty { width: 40px; border: none; background: transparent; color: var(--muted); font-size: 12.5px; text-align: right; outline: none; font-family: inherit; }
+  .inline-qty { -moz-appearance: textfield; font-variant-numeric: tabular-nums; }
+  .inline-qty::-webkit-outer-spin-button, .inline-qty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .inline-qty:focus { color: var(--text); border-bottom: 1px solid var(--accent); }
+  .np-label { display:block; font-size:12px; color:var(--text2); margin: 12px 0 6px; }
+  .np-input { width:100%; border:0.5px solid var(--border); border-radius: var(--radius, 8px); padding:10px 12px; font-size:14px; background:var(--surface); color:var(--text); font-family:inherit; }
+  .np-input:focus { outline:none; border-color:var(--accent); }
+  .suggest-list { display:none; border:0.5px solid var(--border); border-radius:8px; margin-top:4px; overflow:hidden; }
+  .suggest-list.show { display:block; }
+  .suggest-row { display:flex; justify-content:space-between; padding:9px 12px; font-size:13px; cursor:pointer; border-top:0.5px solid var(--border); }
+  .suggest-row:first-child { border-top:none; }
+  .suggest-row:hover { background:var(--surface2); }
+  .step-input { width:84px; text-align:center; font-size:16px; font-weight:600; border:0.5px solid var(--border); border-radius:8px; padding:8px 4px; background:var(--surface); color:var(--text); font-family:inherit; -moz-appearance:textfield; }
+  .step-input:focus { outline:none; border-color:var(--accent); }
+  .step-input::-webkit-outer-spin-button, .step-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  #qty-value { -moz-appearance:textfield; }
+  #qty-value::-webkit-outer-spin-button, #qty-value::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  th.meal-title-cell { text-align: left !important; font-size: 13px; font-weight: 600; color: var(--text2); padding: 10px 8px 6px !important; }
+  .add-row td { text-align: center; padding: 8px !important; }
+  .add-row-btn { background: none; border: none; color: var(--accent); font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 2px 0; }
+  .stepbtn { width: 40px; height: 40px; border-radius: 50%; border: 0.5px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 20px; cursor: pointer; }
+  .stepbtn.accentbtn { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+  .qty-preview { background: var(--surface2); border-radius: 10px; padding: 12px 14px; }
+  .qty-preview .row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
+  .qty-preview .row > span:first-child { color: var(--text2); }
+</style>
+</head>
+<body>
+<div id="role-gate" style="display:none; position:fixed; inset:0; z-index:200; background:var(--bg); align-items:center; justify-content:center; padding:24px;">
+  <div style="max-width:320px; width:100%;">
+    <p style="font-size:16px; font-weight:600; margin:0 0 6px; text-align:center;">Кто вы в этом приложении?</p>
+    <p style="font-size:12px; color:var(--muted); margin:0 0 20px; text-align:center;">Выбор запомнится за вашим аккаунтом. Ошиблись — роль можно сменить, нажав на строку состояния вверху</p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="modal-btn" style="padding:14px;" onclick="pickRole('coach')">Я — тренер</button>
+      <button class="modal-btn" style="padding:14px;" onclick="showJoinForm()">Я — клиент: у меня есть код приглашения</button>
+      <button id="gate-admin" class="modal-btn" style="padding:14px;display:none;" onclick="adminSwitch('coach')">Режим администратора</button>
+    </div>
+  </div>
+</div>
+<div id="join-gate" style="display:none; position:fixed; inset:0; z-index:200; background:var(--bg); align-items:center; justify-content:center; padding:24px;">
+  <div style="max-width:320px; width:100%;">
+    <p style="font-size:16px; font-weight:600; margin:0 0 6px; text-align:center;">Подключение к тренеру</p>
+    <p style="font-size:12px; color:var(--muted); margin:0 0 16px; text-align:center;">Код приглашения вам отправил тренер</p>
+    <label class="np-label" style="margin-top:0;">Код приглашения</label>
+    <input id="join-code" class="np-input" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="Например, K7M2QX" style="letter-spacing:2px;text-transform:uppercase;">
+    <label class="np-label">Ваше имя</label>
+    <input id="join-name" class="np-input" autocomplete="name" placeholder="Как к вам обращаться">
+    <p id="join-error" class="hint" style="color:var(--over); padding:6px 0 0;"></p>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+      <button id="join-btn" class="modal-btn primary" style="padding:13px;" onclick="submitJoin()">Подключиться</button>
+      <button id="join-back" class="modal-btn" style="padding:13px;" onclick="backToRoleGate()">Назад</button>
+      <button id="join-signout" class="modal-btn" style="padding:13px;display:none;" onclick="BACKEND.signOut()">Выйти из аккаунта</button>
+    </div>
+  </div>
+</div>
+
+<div class="mode-switch">
+  <span id="cloud-indicator" role="button" tabindex="0" title="Состояние синхронизации"></span>
+  <button id="admin-switch" class="admin-btn" style="display:none;" onclick="openAdminSwitch()" title="Режим администратора: переключение ролей">⇄ Роль</button>
+  <button class="modebtn active" id="mode-btn-trainee" onclick="setMode('trainee')">Клиент</button>
+  <button class="modebtn" id="mode-btn-coach" onclick="setMode('coach')">Тренер</button>
+  <button class="modebtn" style="flex:0 0 auto; padding:8px 10px;" onclick="resetDemoData()" title="Сбросить демо-данные">↺</button>
+</div>
+<div id="app">
+
+  <!-- ===== ЭКРАН: ДЕНЬ ===== -->
+  <div class="screen active" id="screen-day">
+    <div class="topbar">
+      <button class="icon-btn accent" onclick="openCopyDay()" title="Скопировать день">⧉</button>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="icon-btn" onclick="shiftDay(-1)">‹</button>
+        <span class="title" id="day-title" onclick="goToday()" style="cursor:pointer;" title="Вернуться на сегодня">Сегодня</span>
+        <button class="icon-btn" onclick="shiftDay(1)">›</button>
+      </div>
+      <span style="width:28px"></span>
+    </div>
+    <div class="summary" id="day-summary"></div>
+    <div id="day-meals"></div>
+  </div>
+
+  <!-- ===== ЭКРАН: НЕДЕЛЯ ===== -->
+  <div class="screen" id="screen-week">
+    <div class="topbar">
+      <span style="width:28px"></span>
+      <span class="title">Неделя</span>
+      <span style="width:28px"></span>
+    </div>
+    <div id="week-list"></div>
+  </div>
+
+  <!-- ===== ЭКРАН: ПРОДУКТЫ (каталог) ===== -->
+  <div class="screen" id="screen-products">
+    <div class="topbar">
+      <span class="title">Мои продукты</span>
+      <button class="icon-btn accent" onclick="openNewProduct()">+</button>
+    </div>
+    <div class="chiprow" id="cat-filter-catalog"></div>
+    <div id="catalog-list"></div>
+  </div>
+
+  <!-- ===== ЭКРАН: ДОБАВЛЕНИЕ В ПРИЁМ ПИЩИ ===== -->
+  <div class="screen" id="screen-addproduct">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('screen-day')">‹</button>
+      <span class="title" id="addproduct-title">Добавить продукт</span>
+      <span style="width:28px"></span>
+    </div>
+    <div class="chiprow" id="cat-filter-add"></div>
+    <p class="hint" id="add-hint">До цели по белкам не хватает 32 г</p>
+    <div id="add-list"></div>
+  </div>
+
+  <!-- ===== ЭКРАН: КОПИРОВАНИЕ ДНЯ (заглушка блока 2) ===== -->
+  <div class="screen" id="screen-copyday">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('screen-day')">‹</button>
+      <span class="title">Скопировать день</span>
+      <span style="width:28px"></span>
+    </div>
+    <p class="hint">Выбери день, чей рацион скопировать в текущий</p>
+    <div id="copyday-list"></div>
+  </div>
+
+  <!-- ===== ЭКРАН: ЦЕЛИ (просмотр) ===== -->
+  <div class="screen" id="screen-goals">
+    <div class="topbar">
+      <span style="width:28px"></span>
+      <span class="title">Мои цели</span>
+      <span style="width:28px"></span>
+    </div>
+    <div id="goals-view"></div>
+  </div>
+
+  <!-- ===== ЭКРАН: НОВЫЙ ПРОДУКТ ===== -->
+  <div class="screen" id="screen-newproduct">
+    <div class="topbar">
+      <span class="icon-btn" onclick="go('screen-products')" style="font-size:13px;cursor:pointer;">Отмена</span>
+      <span class="title">Новый продукт</span>
+      <span class="icon-btn accent" onclick="saveNewProduct()" style="font-size:13px;font-weight:600;cursor:pointer;">Сохранить</span>
+    </div>
+    <div class="list-pad" style="padding-top:14px;" id="np-host"></div>
+  </div>
+
+  <!-- ===== ЭКРАН: ВЕС/КОЛИЧЕСТВО ===== -->
+  <div class="screen" id="screen-quantity">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go(editingMeal!=null?'screen-day':'screen-addproduct')">‹</button>
+      <span class="title" id="qty-title">Продукт</span>
+      <button class="icon-btn accent" onclick="confirmAdd()">✓</button>
+    </div>
+    <div class="list-pad" style="padding-top:16px;">
+      <div style="display:flex; align-items:center; gap:14px; justify-content:center; margin: 10px 0 18px;">
+        <button class="stepbtn" onclick="changeAmount(-1)">−</button>
+        <div style="text-align:center; min-width:110px;">
+          <input type="number" id="qty-value" value="100" oninput="onQtyInput(this.value)"
+            style="width:90px; text-align:center; font-size:24px; font-weight:600; border:none; background:transparent; color:var(--text); outline:none;" />
+          <div id="qty-unit" style="font-size:12px; color:var(--muted);">грамм</div>
+        </div>
+        <button class="stepbtn accentbtn" onclick="changeAmount(1)">+</button>
+      </div>
+      <div class="qty-preview" id="qty-preview"></div>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <button class="navitem active" id="nav-day" onclick="go('screen-day')"><span class="ic">📔</span>День</button>
+    <button class="navitem" id="nav-week" onclick="go('screen-week')"><span class="ic">📅</span>Неделя</button>
+    <button class="navitem" id="nav-products" onclick="go('screen-products')"><span class="ic">🍎</span>Продукты</button>
+    <button class="navitem" id="nav-goals" onclick="go('screen-goals')"><span class="ic">🎯</span><i class="nav-dot" id="goals-dot"></i>Цели</button>
+  </div>
+</div>
+
+<div id="coach-app" style="display:none;">
+
+  <!-- ===== ТРЕНЕР: список клиентов ===== -->
+  <div class="screen active" id="c-screen-trainees">
+    <div class="topbar">
+      <span class="title">Мои клиенты</span>
+      <span style="width:28px"></span>
+    </div>
+    <div class="list-pad" style="padding-bottom:0;">
+      <div class="prod-row" style="cursor:pointer;" onclick="openInviteForm()"><span>➕ Пригласить клиента</span><span class="muted">›</span></div>
+    </div>
+    <div id="c-trainees-list"></div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: базовый список продуктов (шаблон для новых клиентов) ===== -->
+  <div class="screen" id="c-screen-template">
+    <div class="topbar">
+      <span style="width:28px"></span>
+      <span class="title">Общая база продуктов</span>
+      <button class="icon-btn accent" onclick="openNewTemplateProduct()">+</button>
+    </div>
+    <p class="hint" style="padding-top:10px;">Общая база для всех клиентов. Новые продукты отсюда появляются у каждого клиента; продукты, которые вы одобряете у клиентов, попадают сюда сами. Правки уже существующих продуктов у добавленных клиентов не меняются</p>
+    <div id="c-template-list"></div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: карточка клиента ===== -->
+  <div class="screen" id="c-screen-card">
+    <div class="topbar">
+      <button class="icon-btn" onclick="cGo('c-screen-trainees')">‹</button>
+      <span class="title" id="c-card-title">Клиент</span>
+      <span style="width:28px"></span>
+    </div>
+    <div class="list-pad">
+      <div class="prod-row" style="cursor:pointer;" onclick="openClientInvite()"><span>🔗 Приглашение клиента</span><span class="muted" id="c-invite-badge">›</span></div>
+      <div class="prod-row" style="cursor:pointer;" onclick="cGo('c-screen-week')"><span>📅 Неделя</span><span class="muted">›</span></div>
+      <div class="prod-row" style="cursor:pointer;" onclick="openCoachGoals()"><span>🎯 Цели по КБЖУ</span><span class="muted">›</span></div>
+      <div class="prod-row" style="cursor:pointer;" onclick="openCoachProducts()"><span>🍎 Продукты</span><span class="muted" id="c-products-badge">›</span></div>
+    </div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: неделя (полная таблица) ===== -->
+  <div class="screen" id="c-screen-week">
+    <div class="topbar">
+      <button class="icon-btn" onclick="cGo('c-screen-card')">‹</button>
+      <span class="title" id="c-week-title">Неделя</span>
+      <span style="width:28px"></span>
+    </div>
+    <div id="c-week-list"></div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: цели ===== -->
+  <div class="screen" id="c-screen-goals">
+    <div class="topbar">
+      <span class="icon-btn" onclick="cGo('c-screen-card')" style="font-size:13px;cursor:pointer;">Отмена</span>
+      <span class="title">Цели — <span id="c-goals-name"></span></span>
+      <span class="icon-btn accent" onclick="saveCoachGoals()" style="font-size:13px;font-weight:600;cursor:pointer;">Сохранить</span>
+    </div>
+    <div class="list-pad" style="padding-top:16px;" id="c-goals-form"></div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: модерация продуктов ===== -->
+  <div class="screen" id="c-screen-products">
+    <div class="topbar">
+      <button class="icon-btn" onclick="cGo('c-screen-card')">‹</button>
+      <span class="title">Продукты — <span id="c-prod-name"></span></span>
+      <button class="icon-btn accent" onclick="openNewProduct('cnp')">+</button>
+    </div>
+    <div class="chiprow" id="c-prod-tabs"></div>
+    <div id="c-products-list"></div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: новый продукт (без подтверждения) ===== -->
+  <div class="screen" id="c-screen-newproduct">
+    <div class="topbar">
+      <span class="icon-btn" onclick="cancelCoachProductForm()" style="font-size:13px;cursor:pointer;">Отмена</span>
+      <span class="title" id="cnp-screen-title">Новый продукт</span>
+      <span class="icon-btn accent" onclick="saveNewProduct()" style="font-size:13px;font-weight:600;cursor:pointer;">Сохранить</span>
+    </div>
+    <p class="hint" style="padding-top:10px;" id="cnp-screen-hint">Продукт попадёт в базу клиента сразу, без подтверждения</p>
+    <div class="list-pad" style="padding-top:4px;" id="cnp-host"></div>
+    <div class="list-pad" id="cnp-delete-wrap" style="display:none; padding-top:6px; padding-bottom:24px;">
+      <button class="modal-btn" style="width:100%; padding:12px; color:var(--over); border-color:var(--over);" onclick="deleteTemplateProduct()">Удалить из общей базы</button>
+      <p class="hint" style="padding-left:0; text-align:center;">У клиентов, у которых этот продукт уже есть, он останется</p>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <button class="navitem active" id="c-nav-trainees" onclick="cGo('c-screen-trainees')"><span class="ic">👥</span>Клиенты</button>
+    <button class="navitem" id="c-nav-base" onclick="openTemplateScreen()"><span class="ic">🍎</span>База продуктов</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="backend-supabase.js"></script>
+<script>
+// ---------- даты (настоящий календарь по часам устройства) ----------
+const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WD_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayISO(){ return isoDate(new Date()); }
+function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function addDays(iso,n){ const d=parseISO(iso); d.setDate(d.getDate()+n); return isoDate(d); }
+function daysBetween(a,b){ return Math.round((parseISO(b)-parseISO(a))/86400000); }
+function dateText(iso){ const d=parseISO(iso); return d.getDate()+' '+MONTHS_GEN[d.getMonth()]; }
+function dayLabel(iso){
+  const diff = daysBetween(todayISO(), iso), base = dateText(iso);
+  if(diff===0) return 'Сегодня, '+base;
+  if(diff===-1) return 'Вчера, '+base;
+  if(diff===1) return 'Завтра, '+base;
+  const d = parseISO(iso);
+  return WD_SHORT[d.getDay()]+', '+base+(d.getFullYear()!==new Date().getFullYear() ? ' '+d.getFullYear() : '');
+}
+function mondayOf(iso){ const d=parseISO(iso); d.setDate(d.getDate()-((d.getDay()+6)%7)); return isoDate(d); }
+function emptyMeals(){ return [ {name:'Завтрак',icon:'☀️',items:[]}, {name:'Обед',icon:'🍲',items:[]}, {name:'Ужин',icon:'🌙',items:[]}, {name:'Перекус',icon:'🥗',items:[]} ]; }
+
+// ---------- стартовые данные ----------
+const GOAL = { kcal: 1800, protein: 120, fat: 60, carbs: 190 };
+const DEFAULT_GOAL = { ...GOAL };
+function freshGoalHistory(){ return [ { date: dateText(todayISO()), goal: { ...DEFAULT_GOAL } } ]; } // новые сверху
+const GOAL_HISTORY = freshGoalHistory();
+const REJECTED_RETENTION_DAYS = 7; // сколько дней отклонённый продукт ещё виден в списке, прежде чем пропасть
+
+
+const PRODUCT_TEMPLATE = [
+  { id:1, name: "Батончик Bombbar Брауни", cat: ["protein","fat","carb"], unit: "piece", kcal: 111, protein: 6.8, fat: 6.2, fatAnimal:0, carbs: 2.5 },
+  { id:2, name: "Батончик Nut&Go", cat: ["protein","fat"], unit: "100g", kcal: 510, protein: 23, fat: 32, fatAnimal:0, carbs: 27 },
+  { id:3, name: "Батончик Primebar", cat: ["protein","fat"], unit: "piece", kcal: 150, protein: 8, fat: 4, fatAnimal:0, carbs: 20.4 },
+  { id:4, name: "Батончик Qwikler", cat: ["protein","fat","carb"], unit: "piece", kcal: 613, protein: 2.5, fat: 10.5, fatAnimal:0, carbs: 4.5 },
+  { id:5, name: "Говядина", cat: ["protein"], unit: "100g", kcal: 256, protein: 25.75, fat: 16.46, fatAnimal:16.46, carbs: 0 },
+  { id:6, name: "Голень куриная", cat: ["protein"], unit: "100g", kcal: 190, protein: 19, fat: 13, fatAnimal:13, carbs: 0 },
+  { id:7, name: "Грудка индейки без кожи", cat: ["protein"], unit: "100g", kcal: 111, protein: 24.6, fat: 0.65, fatAnimal:0.65, carbs: 0 },
+  { id:8, name: "Грудка куриная филе", cat: ["protein"], unit: "100g", kcal: 117, protein: 23.3, fat: 1.7, fatAnimal:1.7, carbs: 0 },
+  { id:9, name: "Грудка куриная филе (Павловская курочка)", cat: ["protein"], unit: "100g", kcal: 102.8, protein: 23, fat: 1.2, fatAnimal:1.2, carbs: 0 },
+  { id:10, name: "Грудка куриная филе (Петелинка)", cat: ["protein"], unit: "100g", kcal: 120, protein: 21, fat: 4, fatAnimal:4, carbs: 0 },
+  { id:11, name: "Грудка куриная филе (Рококо)", cat: ["protein"], unit: "100g", kcal: 117, protein: 21, fat: 3, fatAnimal:3, carbs: 0 },
+  { id:12, name: "Грудка куриная филе (Троекурово)", cat: ["protein"], unit: "100g", kcal: 102, protein: 21, fat: 2, fatAnimal:2, carbs: 0 },
+  { id:13, name: "Грудка куриная филе (Ярославский бройлер)", cat: ["protein"], unit: "100g", kcal: 98, protein: 20, fat: 2, fatAnimal:2, carbs: 0 },
+  { id:14, name: "Грудка куриная филе (Metro chef)", cat: ["protein"], unit: "100g", kcal: 130, protein: 20, fat: 4, fatAnimal:4, carbs: 0 },
+  { id:15, name: "Грудка куриная филе малое (Троекурово)", cat: ["protein"], unit: "100g", kcal: 110, protein: 21, fat: 2.5, fatAnimal:2.5, carbs: 0 },
+  { id:16, name: "Кижуч", cat: ["protein"], unit: "100g", kcal: 160, protein: 22, fat: 7, fatAnimal:7, carbs: 0 },
+  { id:17, name: "Морепродукты", cat: ["protein"], unit: "100g", kcal: 91, protein: 13.89, fat: 2.51, fatAnimal:2.51, carbs: 0 },
+  { id:18, name: "Мясо бедра индейки", cat: ["protein"], unit: "100g", kcal: 134, protein: 20, fat: 6, fatAnimal:6, carbs: 0 },
+  { id:19, name: "Окунь морской", cat: ["protein"], unit: "100g", kcal: 148, protein: 22.2, fat: 5.82, fatAnimal:5.82, carbs: 0 },
+  { id:20, name: "Свинина", cat: ["protein"], unit: "100g", kcal: 130, protein: 13.6, fat: 31.9, fatAnimal:31.9, carbs: 0 },
+  { id:21, name: "Сыр твердый", cat: ["protein"], unit: "100g", kcal: 350, protein: 22.21, fat: 26.91, fatAnimal:26.91, carbs: 4.71 },
+  { id:22, name: "Сыр творожный", cat: ["protein"], unit: "100g", kcal: 238, protein: 6.1, fat: 22.2, fatAnimal:22.2, carbs: 3.5 },
+  { id:23, name: "Творог 5%", cat: ["protein"], unit: "100g", kcal: 121, protein: 16, fat: 5.01, fatAnimal:5.01, carbs: 0 },
+  { id:24, name: "Творог 9%", cat: ["protein"], unit: "100g", kcal: 157, protein: 16, fat: 9, fatAnimal:9, carbs: 0 },
+  { id:25, name: "Телятина", cat: ["protein"], unit: "100g", kcal: 229, protein: 29.85, fat: 11.3, fatAnimal:11.3, carbs: 0 },
+  { id:26, name: "Филе бедра (павловская курочка)", cat: ["protein"], unit: "100g", kcal: 140, protein: 18, fat: 8, fatAnimal:8, carbs: 0 },
+  { id:27, name: "Филе бедра (Петелина)", cat: ["protein"], unit: "100g", kcal: 180, protein: 18, fat: 12, fatAnimal:12, carbs: 0 },
+  { id:28, name: "Филе бёдра (ярославский бройлер)", cat: ["protein"], unit: "100g", kcal: 145, protein: 16, fat: 9, fatAnimal:9, carbs: 0 },
+  { id:29, name: "Филе минтая", cat: ["protein"], unit: "100g", kcal: 73, protein: 16, fat: 1, fatAnimal:1, carbs: 0 },
+  { id:30, name: "Филе трески", cat: ["protein"], unit: "100g", kcal: 75, protein: 16, fat: 1, fatAnimal:1, carbs: 0 },
+  { id:31, name: "Яйцо сырое с1", cat: ["protein"], unit: "100g", kcal: 160, protein: 13, fat: 12, fatAnimal:12, carbs: 0 },
+  { id:32, name: "Ролл Ростикс", cat: ["protein"], unit: "piece", kcal: 689, protein: 35.9, fat: 28.3, fatAnimal:28.3, carbs: 72.7 },
+  { id:33, name: "Арахис", cat: ["fat"], unit: "100g", kcal: 552, protein: 0, fat: 45.2, fatAnimal:0, carbs: 0 },
+  { id:34, name: "Грецкий орех", cat: ["fat"], unit: "100g", kcal: 617, protein: 0, fat: 66.5, fatAnimal:0, carbs: 0 },
+  { id:35, name: "Кешью", cat: ["fat"], unit: "100g", kcal: 437, protein: 0, fat: 48.5, fatAnimal:0, carbs: 0 },
+  { id:36, name: "Масло растительное", cat: ["fat"], unit: "100g", kcal: 706, protein: 0, fat: 80, fatAnimal:0, carbs: 0 },
+  { id:37, name: "Миндаль", cat: ["fat"], unit: "100g", kcal: 630, protein: 0, fat: 54, fatAnimal:0, carbs: 0 },
+  { id:38, name: "Молоко 2,5%", cat: ["fat"], unit: "100g", kcal: 53, protein: 3, fat: 2.5, fatAnimal:2.5, carbs: 0 },
+  { id:39, name: "Молоко 3,2%", cat: ["fat"], unit: "100g", kcal: 60, protein: 2.9, fat: 3.2, fatAnimal:3.2, carbs: 0 },
+  { id:40, name: "Семена подсолнечника", cat: ["fat"], unit: "100g", kcal: 570, protein: 0, fat: 49.57, fatAnimal:0, carbs: 0 },
+  { id:41, name: "Семена тыквы", cat: ["fat"], unit: "100g", kcal: 541, protein: 0, fat: 45.85, fatAnimal:0, carbs: 0 },
+  { id:42, name: "Смесь семян", cat: ["fat"], unit: "100g", kcal: 550, protein: 0, fat: 45, fatAnimal:0, carbs: 0 },
+  { id:43, name: "Сыр дорблю", cat: ["fat"], unit: "100g", kcal: 367, protein: 19, fat: 31, fatAnimal:31, carbs: 0 },
+  { id:44, name: "Сыр натура легкий", cat: ["fat"], unit: "100g", kcal: 260, protein: 28, fat: 16, fatAnimal:16, carbs: 0 },
+  { id:45, name: "Сыр пармезан", cat: ["fat"], unit: "100g", kcal: 390, protein: 33, fat: 29, fatAnimal:29, carbs: 0 },
+  { id:46, name: "Сыр творожный 18%", cat: ["fat"], unit: "100g", kcal: 217, protein: 8.4, fat: 18, fatAnimal:18, carbs: 0 },
+  { id:47, name: "Фисташки", cat: ["fat"], unit: "100g", kcal: 570, protein: 0, fat: 50, fatAnimal:0, carbs: 0 },
+  { id:48, name: "Фундук", cat: ["fat"], unit: "100g", kcal: 603, protein: 0, fat: 66.9, fatAnimal:0, carbs: 0 },
+  { id:49, name: "Хлебцы ржаные тонкие (Щедрые)", cat: ["carb"], unit: "piece", kcal: 19, protein: 0, fat: 0, fatAnimal:0, carbs: 3.7 },
+  { id:50, name: "Помидор", cat: ["carb"], unit: "100g", kcal: 20, protein: 0, fat: 0, fatAnimal:0, carbs: 3.8 },
+  { id:51, name: "Арбуз", cat: ["carb"], unit: "100g", kcal: 30, protein: 0, fat: 0, fatAnimal:0, carbs: 8 },
+  { id:52, name: "Персик", cat: ["carb"], unit: "100g", kcal: 43, protein: 0, fat: 0, fatAnimal:0, carbs: 9 },
+  { id:53, name: "Груша", cat: ["carb"], unit: "100g", kcal: 45, protein: 0, fat: 0, fatAnimal:0, carbs: 11 },
+  { id:54, name: "Сок яблочный", cat: ["carb"], unit: "100g", kcal: 45, protein: 0, fat: 0, fatAnimal:0, carbs: 11 },
+  { id:55, name: "Яблоки", cat: ["carb"], unit: "100g", kcal: 55, protein: 0, fat: 0, fatAnimal:0, carbs: 13.81 },
+  { id:56, name: "Картофель", cat: ["carb"], unit: "100g", kcal: 65, protein: 0, fat: 0, fatAnimal:0, carbs: 16.3 },
+  { id:57, name: "Виноград", cat: ["carb"], unit: "100g", kcal: 72, protein: 0, fat: 0, fatAnimal:0, carbs: 18.1 },
+  { id:58, name: "Бананы", cat: ["carb"], unit: "100g", kcal: 87, protein: 0, fat: 0, fatAnimal:0, carbs: 21.8 },
+  { id:59, name: "Лаваш", cat: ["carb"], unit: "100g", kcal: 167, protein: 0, fat: 0, fatAnimal:0, carbs: 34.4 },
+  { id:60, name: "Хлеб ржаной", cat: ["carb"], unit: "100g", kcal: 200, protein: 0, fat: 0, fatAnimal:0, carbs: 41 },
+  { id:61, name: "Хлеб белый", cat: ["carb"], unit: "100g", kcal: 260, protein: 0, fat: 0, fatAnimal:0, carbs: 51 },
+  { id:62, name: "Булочка Арбатская", cat: ["carb"], unit: "100g", kcal: 268, protein: 0, fat: 0, fatAnimal:0, carbs: 52.4 },
+  { id:63, name: "Гречка", cat: ["carb"], unit: "100g", kcal: 272, protein: 0, fat: 0, fatAnimal:0, carbs: 68 },
+  { id:64, name: "Макароны (барилла №5)", cat: ["carb"], unit: "100g", kcal: 279, protein: 0, fat: 0, fatAnimal:0, carbs: 69.7 },
+  { id:65, name: "Макароны", cat: ["carb"], unit: "100g", kcal: 279, protein: 0, fat: 0, fatAnimal:0, carbs: 69.7 },
+  { id:66, name: "Макароны Макфа (ракушки)", cat: ["carb"], unit: "100g", kcal: 280, protein: 0, fat: 0, fatAnimal:0, carbs: 70.5 },
+  { id:67, name: "Макароны (Щебекенские)", cat: ["carb"], unit: "100g", kcal: 288, protein: 0, fat: 0, fatAnimal:0, carbs: 72 },
+  { id:68, name: "Рис (74)", cat: ["carb"], unit: "100g", kcal: 350, protein: 0, fat: 0, fatAnimal:0, carbs: 74 },
+  { id:69, name: "Рис басмати (Мистраль)", cat: ["carb"], unit: "100g", kcal: 348, protein: 0, fat: 0, fatAnimal:0, carbs: 76.4 },
+  { id:70, name: "Рис (77)", cat: ["carb"], unit: "100g", kcal: 348, protein: 0, fat: 0, fatAnimal:0, carbs: 77 },
+  { id:71, name: "Рис (80)", cat: ["carb"], unit: "100g", kcal: 348, protein: 0, fat: 0, fatAnimal:0, carbs: 80.4 },
+  { id:72, name: "Рис (85)", cat: ["carb"], unit: "100g", kcal: 248, protein: 0, fat: 0, fatAnimal:0, carbs: 85 },
+];
+let nextProductId = 73;
+const TEMPLATE_KEY = 'kbju_product_template_v1';
+(function loadSavedTemplate(){
+  try{
+    const raw = localStorage.getItem(TEMPLATE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    if(Array.isArray(saved) && saved.length){
+      PRODUCT_TEMPLATE.length = 0; saved.forEach(p=>PRODUCT_TEMPLATE.push(p));
+      nextProductId = Math.max(nextProductId, Math.max(...PRODUCT_TEMPLATE.map(p=>p.id)) + 1);
+    }
+  }catch(e){}
+})();
+// у каждого продукта общей базы есть постоянный baseId; личные копии клиентов ссылаются на него
+const NEXT_BASE_KEY = 'kbju_next_base_id_v1';
+let nextBaseId = 1; // счётчик только растёт: id удалённого продукта никогда не выдаётся повторно
+try{ nextBaseId = Math.max(1, parseInt(localStorage.getItem(NEXT_BASE_KEY)||'1',10) || 1); }catch(e){}
+function normalizeTemplate(){
+  PRODUCT_TEMPLATE.forEach(b=>{ if(b.baseId==null) b.baseId = b.id; });
+  nextBaseId = Math.max(nextBaseId, Math.max(0, ...PRODUCT_TEMPLATE.map(b=>b.baseId)) + 1);
+}
+normalizeTemplate();
+// ключ для поиска дублей: без регистра, ё=е, без знаков препинания, порядок слов не важен
+function dupKey(s){
+  return String(s||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9%]+/g,' ').trim().split(/\s+/).filter(Boolean).sort().join(' ');
+}
+function findDup(name, list, excludeId){
+  const k = dupKey(name);
+  return list.find(p=>p.id!==excludeId && dupKey(p.name)===k) || null;
+}
+const LEGACY_SEED_MAX_ID = 72; // у каталогов, созданных до общей базы, исходные позиции совпадали с базой по id
+function mergeBaseIntoCatalog(){ // докладывает в каталог текущего клиента то, чего в нём ещё нет из общей базы; возвращает число изменений
+  let changed = 0;
+  if(PRODUCTS.length && !PRODUCTS.some(p=>p.baseId!=null)){
+    PRODUCTS.forEach(p=>{ if(p.addedBy==null && p.id<=LEGACY_SEED_MAX_ID && PRODUCT_TEMPLATE.some(b=>b.baseId===p.id)){ p.baseId = p.id; changed++; } });
+  }
+  const have = new Set(PRODUCTS.filter(p=>p.baseId!=null).map(p=>p.baseId));
+  const byKey = new Map(); PRODUCTS.forEach(p=>{ if(p.baseId==null) byKey.set(dupKey(p.name), p); });
+  PRODUCT_TEMPLATE.forEach(b=>{
+    if(have.has(b.baseId)) return;
+    const k = dupKey(b.name), mine = byKey.get(k);
+    if(mine){
+      // продукт клиента с таким названием ещё на проверке / отклонён: ничего не трогаем и не пишем — решение придёт от тренера
+      if(mine.pending || mine.rejected){ have.add(b.baseId); return; }
+      mine.baseId = b.baseId; have.add(b.baseId); byKey.delete(k); changed++; return; // такой уже есть по названию — просто связываем, без дубля
+    }
+    PRODUCTS.push({ ...b, cat: b.cat.slice(), id: nextProductId++, baseId: b.baseId });
+    have.add(b.baseId); changed++;
+  });
+  return changed;
+}
+function persistTemplate(){
+  try{
+    localStorage.setItem(TEMPLATE_KEY, JSON.stringify(PRODUCT_TEMPLATE));
+    localStorage.setItem(NEXT_BASE_KEY, String(nextBaseId));
+  }catch(e){}
+  if(DB && MY_ROLE==='coach'){ // общая база живёт в облаке, её ведёт тренер
+    DB.doc('shared/base').set({ items: PRODUCT_TEMPLATE, nextBaseId })
+      .then(()=>setSync('ok'))
+      .catch(e=>{ console.error('base write failed', e.code, e.message); setSync('error', 'общая база: запись не прошла: '+(e.code||e.message||'ошибка')); });
+  }
+}
+function cloneTemplate(){ return PRODUCT_TEMPLATE.map(p=>({...p, cat: p.cat.slice()})); }
+let PRODUCTS = cloneTemplate(); // рабочий каталог того, кто сейчас просматривается; у каждого нового клиента стартует как копия PRODUCT_TEMPLATE
+const CATS = [["all","Все"],["protein","Белки"],["fat","Жиры"],["carb","Углеводы"]];
+
+// ---------- офлайн-база для автоподсказки КБЖУ по названию (без интернета) ----------
+const FOOD_DB = [
+  {name:"Батончик Bombbar Брауни", unit:"piece", kcal:111, protein:6.8, fat:6.2, fatAnimal:0, carbs:2.5, cat:["protein","fat","carb"]},
+  {name:"Батончик Nut&Go", unit:"100g", kcal:510, protein:23, fat:32, fatAnimal:0, carbs:27, cat:["protein","fat"]},
+  {name:"Батончик Primebar", unit:"piece", kcal:150, protein:8, fat:4, fatAnimal:0, carbs:20.4, cat:["protein","fat"]},
+  {name:"Батончик Qwikler", unit:"piece", kcal:613, protein:2.5, fat:10.5, fatAnimal:0, carbs:4.5, cat:["protein","fat","carb"]},
+  {name:"Говядина", unit:"100g", kcal:256, protein:25.75, fat:16.46, fatAnimal:16.46, carbs:0, cat:["protein"]},
+  {name:"Голень куриная", unit:"100g", kcal:190, protein:19, fat:13, fatAnimal:13, carbs:0, cat:["protein"]},
+  {name:"Грудка индейки без кожи", unit:"100g", kcal:111, protein:24.6, fat:0.65, fatAnimal:0.65, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе", unit:"100g", kcal:117, protein:23.3, fat:1.7, fatAnimal:1.7, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе (Павловская курочка)", unit:"100g", kcal:102.8, protein:23, fat:1.2, fatAnimal:1.2, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе (Петелинка)", unit:"100g", kcal:120, protein:21, fat:4, fatAnimal:4, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе (Рококо)", unit:"100g", kcal:117, protein:21, fat:3, fatAnimal:3, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе (Троекурово)", unit:"100g", kcal:102, protein:21, fat:2, fatAnimal:2, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе (Ярославский бройлер)", unit:"100g", kcal:98, protein:20, fat:2, fatAnimal:2, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе (Metro chef)", unit:"100g", kcal:130, protein:20, fat:4, fatAnimal:4, carbs:0, cat:["protein"]},
+  {name:"Грудка куриная филе малое (Троекурово)", unit:"100g", kcal:110, protein:21, fat:2.5, fatAnimal:2.5, carbs:0, cat:["protein"]},
+  {name:"Кижуч", unit:"100g", kcal:160, protein:22, fat:7, fatAnimal:7, carbs:0, cat:["protein"]},
+  {name:"Морепродукты", unit:"100g", kcal:91, protein:13.89, fat:2.51, fatAnimal:2.51, carbs:0, cat:["protein"]},
+  {name:"Мясо бедра индейки", unit:"100g", kcal:134, protein:20, fat:6, fatAnimal:6, carbs:0, cat:["protein"]},
+  {name:"Окунь морской", unit:"100g", kcal:148, protein:22.2, fat:5.82, fatAnimal:5.82, carbs:0, cat:["protein"]},
+  {name:"Свинина", unit:"100g", kcal:130, protein:13.6, fat:31.9, fatAnimal:31.9, carbs:0, cat:["protein"]},
+  {name:"Сыр твердый", unit:"100g", kcal:350, protein:22.21, fat:26.91, fatAnimal:26.91, carbs:4.71, cat:["protein"]},
+  {name:"Сыр творожный", unit:"100g", kcal:238, protein:6.1, fat:22.2, fatAnimal:22.2, carbs:3.5, cat:["protein"]},
+  {name:"Творог 5%", unit:"100g", kcal:121, protein:16, fat:5.01, fatAnimal:5.01, carbs:0, cat:["protein"]},
+  {name:"Творог 9%", unit:"100g", kcal:157, protein:16, fat:9, fatAnimal:9, carbs:0, cat:["protein"]},
+  {name:"Телятина", unit:"100g", kcal:229, protein:29.85, fat:11.3, fatAnimal:11.3, carbs:0, cat:["protein"]},
+  {name:"Филе бедра (павловская курочка)", unit:"100g", kcal:140, protein:18, fat:8, fatAnimal:8, carbs:0, cat:["protein"]},
+  {name:"Филе бедра (Петелина)", unit:"100g", kcal:180, protein:18, fat:12, fatAnimal:12, carbs:0, cat:["protein"]},
+  {name:"Филе бёдра (ярославский бройлер)", unit:"100g", kcal:145, protein:16, fat:9, fatAnimal:9, carbs:0, cat:["protein"]},
+  {name:"Филе минтая", unit:"100g", kcal:73, protein:16, fat:1, fatAnimal:1, carbs:0, cat:["protein"]},
+  {name:"Филе трески", unit:"100g", kcal:75, protein:16, fat:1, fatAnimal:1, carbs:0, cat:["protein"]},
+  {name:"Яйцо сырое с1", unit:"100g", kcal:160, protein:13, fat:12, fatAnimal:12, carbs:0, cat:["protein"]},
+  {name:"Ролл Ростикс", unit:"piece", kcal:689, protein:35.9, fat:28.3, fatAnimal:28.3, carbs:72.7, cat:["protein"]},
+  {name:"Арахис", unit:"100g", kcal:552, protein:0, fat:45.2, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Грецкий орех", unit:"100g", kcal:617, protein:0, fat:66.5, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Кешью", unit:"100g", kcal:437, protein:0, fat:48.5, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Масло растительное", unit:"100g", kcal:706, protein:0, fat:80, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Миндаль", unit:"100g", kcal:630, protein:0, fat:54, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Молоко 2,5%", unit:"100g", kcal:53, protein:3, fat:2.5, fatAnimal:2.5, carbs:0, cat:["fat"]},
+  {name:"Молоко 3,2%", unit:"100g", kcal:60, protein:2.9, fat:3.2, fatAnimal:3.2, carbs:0, cat:["fat"]},
+  {name:"Семена подсолнечника", unit:"100g", kcal:570, protein:0, fat:49.57, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Семена тыквы", unit:"100g", kcal:541, protein:0, fat:45.85, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Смесь семян", unit:"100g", kcal:550, protein:0, fat:45, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Сыр дорблю", unit:"100g", kcal:367, protein:19, fat:31, fatAnimal:31, carbs:0, cat:["fat"]},
+  {name:"Сыр натура легкий", unit:"100g", kcal:260, protein:28, fat:16, fatAnimal:16, carbs:0, cat:["fat"]},
+  {name:"Сыр пармезан", unit:"100g", kcal:390, protein:33, fat:29, fatAnimal:29, carbs:0, cat:["fat"]},
+  {name:"Сыр творожный 18%", unit:"100g", kcal:217, protein:8.4, fat:18, fatAnimal:18, carbs:0, cat:["fat"]},
+  {name:"Фисташки", unit:"100g", kcal:570, protein:0, fat:50, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Фундук", unit:"100g", kcal:603, protein:0, fat:66.9, fatAnimal:0, carbs:0, cat:["fat"]},
+  {name:"Хлебцы ржаные тонкие (Щедрые)", unit:"piece", kcal:19, protein:0, fat:0, fatAnimal:0, carbs:3.7, cat:["carb"]},
+  {name:"Помидор", unit:"100g", kcal:20, protein:0, fat:0, fatAnimal:0, carbs:3.8, cat:["carb"]},
+  {name:"Арбуз", unit:"100g", kcal:30, protein:0, fat:0, fatAnimal:0, carbs:8, cat:["carb"]},
+  {name:"Персик", unit:"100g", kcal:43, protein:0, fat:0, fatAnimal:0, carbs:9, cat:["carb"]},
+  {name:"Груша", unit:"100g", kcal:45, protein:0, fat:0, fatAnimal:0, carbs:11, cat:["carb"]},
+  {name:"Сок яблочный", unit:"100g", kcal:45, protein:0, fat:0, fatAnimal:0, carbs:11, cat:["carb"]},
+  {name:"Яблоки", unit:"100g", kcal:55, protein:0, fat:0, fatAnimal:0, carbs:13.81, cat:["carb"]},
+  {name:"Картофель", unit:"100g", kcal:65, protein:0, fat:0, fatAnimal:0, carbs:16.3, cat:["carb"]},
+  {name:"Виноград", unit:"100g", kcal:72, protein:0, fat:0, fatAnimal:0, carbs:18.1, cat:["carb"]},
+  {name:"Бананы", unit:"100g", kcal:87, protein:0, fat:0, fatAnimal:0, carbs:21.8, cat:["carb"]},
+  {name:"Лаваш", unit:"100g", kcal:167, protein:0, fat:0, fatAnimal:0, carbs:34.4, cat:["carb"]},
+  {name:"Хлеб ржаной", unit:"100g", kcal:200, protein:0, fat:0, fatAnimal:0, carbs:41, cat:["carb"]},
+  {name:"Хлеб белый", unit:"100g", kcal:260, protein:0, fat:0, fatAnimal:0, carbs:51, cat:["carb"]},
+  {name:"Булочка Арбатская", unit:"100g", kcal:268, protein:0, fat:0, fatAnimal:0, carbs:52.4, cat:["carb"]},
+  {name:"Гречка", unit:"100g", kcal:272, protein:0, fat:0, fatAnimal:0, carbs:68, cat:["carb"]},
+  {name:"Макароны (барилла №5)", unit:"100g", kcal:279, protein:0, fat:0, fatAnimal:0, carbs:69.7, cat:["carb"]},
+  {name:"Макароны", unit:"100g", kcal:279, protein:0, fat:0, fatAnimal:0, carbs:69.7, cat:["carb"]},
+  {name:"Макароны Макфа (ракушки)", unit:"100g", kcal:280, protein:0, fat:0, fatAnimal:0, carbs:70.5, cat:["carb"]},
+  {name:"Макароны (Щебекенские)", unit:"100g", kcal:288, protein:0, fat:0, fatAnimal:0, carbs:72, cat:["carb"]},
+  {name:"Рис (74)", unit:"100g", kcal:350, protein:0, fat:0, fatAnimal:0, carbs:74, cat:["carb"]},
+  {name:"Рис басмати (Мистраль)", unit:"100g", kcal:348, protein:0, fat:0, fatAnimal:0, carbs:76.4, cat:["carb"]},
+  {name:"Рис (77)", unit:"100g", kcal:348, protein:0, fat:0, fatAnimal:0, carbs:77, cat:["carb"]},
+  {name:"Рис (80)", unit:"100g", kcal:348, protein:0, fat:0, fatAnimal:0, carbs:80.4, cat:["carb"]},
+  {name:"Рис (85)", unit:"100g", kcal:248, protein:0, fat:0, fatAnimal:0, carbs:85, cat:["carb"]},
+];
+function searchFoodDB(q){
+  q = q.trim().toLowerCase();
+  if(q.length < 2) return [];
+  return FOOD_DB.filter(f=>f.name.toLowerCase().includes(q)).slice(0,6);
+}
+
+const DAYS = {}; // дневник по датам "ГГГГ-ММ-ДД"; пустые дни создаются при просмотре и не сохраняются
+let currentDay = todayISO();
+function dayObj(iso){ if(!DAYS[iso]) DAYS[iso] = { meals: emptyMeals() }; return DAYS[iso]; }
+function dayHasItems(d){ return !!d && Array.isArray(d.meals) && d.meals.some(m=>m.items && m.items.length); }
+function daysForSave(){ const out = {}; Object.keys(DAYS).forEach(k=>{ if(ISO_RE.test(k) && dayHasItems(DAYS[k])) out[k] = DAYS[k]; }); return out; }
+function replaceDays(src){ // целиком заменяем дневник (иначе данные одного клиента подмешались бы другому)
+  Object.keys(DAYS).forEach(k=>delete DAYS[k]);
+  if(src) Object.keys(src).forEach(k=>{ if(ISO_RE.test(k) && src[k] && Array.isArray(src[k].meals)) DAYS[k] = src[k]; });
+}
+
+// Допустимое отклонение от цели — настраивает тренер персонально для клиента
+const TOLERANCE = { kcal: 100, protein: 10, fat: 8, carbs: 15 };
+const DEFAULT_TOLERANCE = { ...TOLERANCE };
+const FAT_BALANCE_TARGET = 0.4; // доля животных жиров от общего, ~40/60
+const FAT_BALANCE_TOL = 0.12;
+
+let weekOffset = 0; // 0 — текущая неделя (пн–вс), -1 — прошлая, +1 — следующая
+function weekRange(){ const mon = addDays(mondayOf(todayISO()), weekOffset*7); return { mon, sun: addDays(mon,6) }; }
+function weekTitle(){
+  const {mon,sun} = weekRange(), a = parseISO(mon), b = parseISO(sun);
+  return a.getMonth()===b.getMonth() ? a.getDate()+'–'+b.getDate()+' '+MONTHS_GEN[b.getMonth()] : a.getDate()+' '+MONTHS_GEN[a.getMonth()]+' – '+b.getDate()+' '+MONTHS_GEN[b.getMonth()];
+}
+function weekRows(){ // итоги по каждому дню недели считаются из реального дневника
+  const {mon} = weekRange(), today = todayISO(), rows = [];
+  for(let i=0;i<7;i++){
+    const iso = addDays(mon,i), d = parseISO(iso), day = DAYS[iso];
+    const row = { iso, isToday: iso===today, d: WD_SHORT[d.getDay()]+' '+d.getDate(), kcal:null, protein:null, fat:null, carbs:null, fatAnimal:null, fatVeg:null };
+    if(dayHasItems(day)){
+      const t = sumDay(day);
+      row.kcal = Math.round(t.kcal); row.protein = Math.round(t.protein); row.fat = Math.round(t.fat); row.carbs = Math.round(t.carbs);
+      row.fatAnimal = Math.round(t.fatAnimal); row.fatVeg = Math.max(0, row.fat - row.fatAnimal);
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+function shiftWeek(dir){ weekOffset += dir; renderWeek(); if(typeof renderTraineeCardMini==='function') renderTraineeCardMini(); }
+// возвращает null (в норме), 'over' (выше цели) или 'under' (ниже цели)
+function deviation(val, goal, tol){
+  if(val==null) return null;
+  if(val - goal > tol) return 'over';
+  if(goal - val > tol) return 'under';
+  return null;
+}
+// единая раскраска: выше цели — красный, ниже — жёлтый, в норме — зелёный
+function devClass(dir){ return dir==='over' ? 'wk-over' : dir==='under' ? 'wk-under' : 'wk-ok'; }
+// для баланса жиров: перекос в животные — красный (как "выше"), в растительные — жёлтый (как "ниже"), норма — зелёный
+function balClass(balDir){ return balDir==='animal' ? 'wk-over' : balDir==='veg' ? 'wk-under' : 'wk-ok'; }
+function fatBalanceDir(animal, veg){
+  if(animal==null || veg==null || (animal+veg)===0) return null;
+  const ratio = animal/(animal+veg);
+  if(ratio - FAT_BALANCE_TARGET > FAT_BALANCE_TOL) return 'animal'; // перекос в животные — красный (как "выше")
+  if(FAT_BALANCE_TARGET - ratio > FAT_BALANCE_TOL) return 'veg';    // перекос в растительные — жёлтый (как "ниже")
+  return null;
+}
+
+// ---------- навигация ----------
+const scrollMem = {};
+const DAY_CHILDREN = ['screen-addproduct','screen-quantity','screen-copyday'];
+function curScrollY(){ return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0; }
+function updateStickyOffsets(){ // липкие заголовки таблиц встают ровно под верхней панелью
+  try{
+    const tb = document.querySelector('.screen.active .topbar');
+    const h = tb ? Math.round(tb.getBoundingClientRect().height) : 0;
+    if(h > 0) document.documentElement.style.setProperty('--topbar-h', h + 'px');
+  }catch(e){}
+}
+window.addEventListener('resize', updateStickyOffsets);
+function resetScroll(y){
+  y = y||0;
+  try{ window.scrollTo(0,y); }catch(e){}
+  document.documentElement.scrollTop = y; document.body.scrollTop = y;
+}
+function go(id){
+  const prevEl = document.querySelector('#app .screen.active');
+  const prev = prevEl ? prevEl.id : null;
+  if(prev) scrollMem[prev] = curScrollY();
+  if(prev==='screen-goals' && id!=='screen-goals') goalsHighlight = null; // подсветка — только при первом заходе
+  document.querySelectorAll('#app .screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // новый экран открываем сверху; вернувшись в день из добавления продукта — на прежнее место
+  updateStickyOffsets();
+  resetScroll(id==='screen-day' && DAY_CHILDREN.includes(prev) ? (scrollMem['screen-day']||0) : 0);
+  document.querySelectorAll('#app .navitem').forEach(n=>n.classList.remove('active'));
+  if(id==='screen-day') document.getElementById('nav-day').classList.add('active');
+  if(id==='screen-week') document.getElementById('nav-week').classList.add('active');
+  if(id==='screen-products') document.getElementById('nav-products').classList.add('active');
+  if(id==='screen-goals'){
+    document.getElementById('nav-goals').classList.add('active');
+    markGoalsSeen();      // просмотрели — бейдж гаснет, изменения подсвечиваются
+    renderGoalsView();
+  }
+}
+
+// ---------- рендер дня ----------
+function sumDay(day){
+  let t={kcal:0,protein:0,fat:0,fatAnimal:0,carbs:0};
+  day.meals.forEach(m=>m.items.forEach(i=>{t.kcal+=i.kcal;t.protein+=i.protein;t.fat+=i.fat;t.fatAnimal+=(i.fatAnimal||0);t.carbs+=i.carbs;}));
+  return t;
+}
+function renderSummary(){
+  const day = dayObj(currentDay);
+  const t = sumDay(day);
+  const fatVeg = Math.max(0, t.fat - t.fatAnimal);
+  const balDir = fatBalanceDir(t.fatAnimal, fatVeg);
+  const balCls = balClass(balDir);
+  const dK = deviation(t.kcal, GOAL.kcal, TOLERANCE.kcal);
+  const dP = deviation(t.protein, GOAL.protein, TOLERANCE.protein);
+  const dF = deviation(t.fat, GOAL.fat, TOLERANCE.fat);
+  const dC = deviation(t.carbs, GOAL.carbs, TOLERANCE.carbs);
+  const cls = devClass;
+  document.getElementById('day-summary').innerHTML = `
+    <div><p class="stat-label">Ккал</p><p class="stat-val"><span class="${cls(dK)}">${Math.round(t.kcal)}</span><small>/${GOAL.kcal}</small></p></div>
+    <div><p class="stat-label">Белки</p><p class="stat-val"><span class="${cls(dP)}">${Math.round(t.protein)}</span><small>/${GOAL.protein}</small></p></div>
+    <div><p class="stat-label">Жиры</p><p class="stat-val"><span class="${cls(dF)}">${Math.round(t.fat)}</span><small>/${GOAL.fat}</small></p></div>
+    <div><p class="stat-label">Углев.</p><p class="stat-val"><span class="${cls(dC)}">${Math.round(t.carbs)}</span><small>/${GOAL.carbs}</small></p></div>
+    <div style="grid-column: 1/-1; margin-top:4px;"><p class="stat-label">Баланс жиров (жив/раст)</p><p class="stat-val ${balCls}" style="font-size:13px;">${Math.round(t.fatAnimal)} / ${Math.round(fatVeg)} г</p></div>`;
+}
+function renderDay(){
+  const day = dayObj(currentDay);
+  document.getElementById('day-title').textContent = dayLabel(currentDay);
+  renderSummary();
+  document.getElementById('day-meals').innerHTML = day.meals.map(m=>{
+    const mk = m.items.reduce((s,i)=>s+i.kcal,0);
+    const titleTxt = m.items.length
+      ? `${m.icon} ${m.name} · <span class="meal-kcal">${Math.round(mk)} ккал</span>`
+      : `${m.icon} ${m.name} — не заполнено`;
+    const headRow = m.items.length
+      ? `<tr><th colspan="2" class="meal-title-cell">${titleTxt}</th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th><th class="del-cell"></th></tr>`
+      : `<tr><th colspan="6" class="meal-title-cell">${titleTxt}</th></tr>`;
+    const itemRows = m.items.map((i,idx)=>{
+      const val = i.w!=null ? i.w : i.qty;
+      const unit = i.w!=null ? 'г' : 'шт';
+      return `<tr data-meal="${m.name}" data-idx="${idx}">
+        <td>${i.p}</td>
+        <td class="muted qty-cell"><input type="number" class="inline-qty" value="${val}" oninput="onInlineQtyInput(this)"><span class="qty-unit">${unit}</span></td>
+        <td class="col-p" data-f="protein">${Math.round(i.protein)}</td>
+        <td class="col-f" data-f="fat">${Math.round(i.fat)}</td>
+        <td class="col-c" data-f="carbs">${Math.round(i.carbs)}</td>
+        <td class="del-cell"><button class="del-btn" onclick="deleteItem('${m.name}', ${idx})" title="Удалить из дневника" aria-label="Удалить">×</button></td>
+      </tr>`;
+    }).join('');
+    const addRow = `<tr class="add-row"><td colspan="6"><button class="add-row-btn" onclick="openAdd('${m.name}')">+ Добавить продукт</button></td></tr>`;
+    return `<div class="meal"><table class="ktable day-table" data-meal="${m.name}">
+      <colgroup><col class="c-name"><col class="c-qty"><col class="c-mac"><col class="c-mac"><col class="c-mac"><col class="c-del"></colgroup>
+      <thead>${headRow}</thead>
+      <tbody>${itemRows}${addRow}</tbody>
+    </table></div>`;
+  }).join('');
+}
+function deleteItem(mealName, idx){
+  const meal = dayObj(currentDay).meals.find(m=>m.name===mealName);
+  if(!meal || idx<0 || idx>=meal.items.length) return;
+  meal.items.splice(idx, 1);
+  renderDay();
+  persist();
+}
+const MAX_DAYS_AHEAD = 14; // вперёд можно планировать рацион на две недели
+function shiftDay(dir){
+  const next = addDays(currentDay, dir);
+  if(daysBetween(todayISO(), next) > MAX_DAYS_AHEAD) return;
+  currentDay = next;
+  renderDay();
+  resetScroll(0);
+}
+function goToday(){ currentDay = todayISO(); renderDay(); resetScroll(0); }
+// ---------- копирование дня ----------
+// ---------- собственная модалка (confirm/alert блокируются в песочнице предпросмотра) ----------
+let _modalYes = null;
+function showConfirm(text, onYes, yesLabel){
+  _modalYes = onYes;
+  document.getElementById('modal-text').textContent = text;
+  document.getElementById('modal-buttons').innerHTML =
+    `<button class="modal-btn" onclick="hideModal()">Отмена</button>
+     <button class="modal-btn primary" onclick="_modalConfirmYes()">${yesLabel||'Заменить'}</button>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function _modalConfirmYes(){ const cb = _modalYes; hideModal(); if(cb) cb(); }
+function showToast(text){
+  _modalYes = null;
+  document.getElementById('modal-text').textContent = text;
+  document.getElementById('modal-buttons').innerHTML = `<button class="modal-btn primary" onclick="hideModal()">Ок</button>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function hideModal(){ document.getElementById('modal-overlay').classList.remove('show'); _modalYes = null; }
+
+function openCopyDay(){
+  renderCopyDayList();
+  go('screen-copyday');
+}
+function renderCopyDayList(){
+  const keys = Object.keys(DAYS).filter(k=>ISO_RE.test(k) && k!==currentDay && dayHasItems(DAYS[k])).sort().reverse().slice(0,40);
+  const rows = keys.map(k=>{
+    const t = sumDay(DAYS[k]);
+    return `<div class="prod-row" style="cursor:pointer;" onclick="copyDayFrom('${k}')">
+      <div><p style="margin:0;font-size:14px;">${dayLabel(k)}</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted);">${Math.round(t.kcal)} ккал · Б${Math.round(t.protein)} Ж${Math.round(t.fat)} У${Math.round(t.carbs)}</p></div>
+      <span class="muted">›</span>
+    </div>`;
+  }).join('');
+  document.getElementById('copyday-list').innerHTML = rows
+    ? `<div class="list-pad">${rows}</div>`
+    : `<p class="hint">Пока нет других дней с записями — копировать нечего</p>`;
+}
+function copyDayFrom(key){
+  const src = DAYS[key];
+  if(!src) return;
+  const dest = dayObj(currentDay);
+  const hasItems = dest.meals.some(m=>m.items.length);
+  const doCopy = () => {
+    dest.meals = src.meals.map(m=>({ name: m.name, icon: m.icon, items: m.items.map(i=>({...i})) }));
+    renderDay();
+    persist();
+    go('screen-day');
+  };
+  if(hasItems) showConfirm(`Заменить текущий рацион дня на рацион из «${dayLabel(key)}»?`, doCopy);
+  else doCopy();
+}
+function onInlineQtyInput(inputEl){
+  const tr = inputEl.closest('tr');
+  const mealName = tr.dataset.meal;
+  const idx = parseInt(tr.dataset.idx, 10);
+  const meal = dayObj(currentDay).meals.find(x=>x.name===mealName);
+  const item = meal.items[idx];
+  const prod = PRODUCTS.find(p=>p.name===item.p);
+  let n = parseFloat(inputEl.value);
+  if(isNaN(n) || n<0) n = 0;
+  if(prod){
+    const factor = prod.unit==='piece' ? n : n/100;
+    item.kcal = prod.kcal*factor; item.protein = prod.protein*factor;
+    item.fat = prod.fat*factor; item.fatAnimal = (prod.fatAnimal||0)*factor; item.carbs = prod.carbs*factor;
+  } else {
+    // продукта нет в текущем каталоге (например, демо-позиция или уже удалённая) — пересчитываем пропорционально от старого количества
+    const oldAmount = item.w!=null ? item.w : item.qty;
+    const factor = oldAmount>0 ? n/oldAmount : 0;
+    item.kcal *= factor; item.protein *= factor; item.fat *= factor; item.fatAnimal = (item.fatAnimal||0)*factor; item.carbs *= factor;
+  }
+  if(item.w!=null) item.w = n; else item.qty = n;
+  tr.querySelector('[data-f="protein"]').textContent = Math.round(item.protein);
+  tr.querySelector('[data-f="fat"]').textContent = Math.round(item.fat);
+  tr.querySelector('[data-f="carbs"]').textContent = Math.round(item.carbs);
+  const table = tr.closest('table');
+  const mk = meal.items.reduce((s,i)=>s+i.kcal,0);
+  const kcalSpan = table.querySelector('.meal-kcal');
+  if(kcalSpan) kcalSpan.textContent = Math.round(mk)+' ккал';
+  renderSummary();
+  persist();
+}
+
+// ---------- рендер недели ----------
+function cellHtml(val, goal, tol, unit){
+  if(val==null) return `<td class="wk-cell muted">—</td>`;
+  const dir = deviation(val, goal, tol);
+  return `<td class="wk-cell ${devClass(dir)}">${val}${unit||''}</td>`;
+}
+function weekTableHTML(){
+  const rows = weekRows().map(w=>{
+    const dirs = [deviation(w.kcal,GOAL.kcal,TOLERANCE.kcal), deviation(w.protein,GOAL.protein,TOLERANCE.protein), deviation(w.fat,GOAL.fat,TOLERANCE.fat), deviation(w.carbs,GOAL.carbs,TOLERANCE.carbs)];
+    const balDir = fatBalanceDir(w.fatAnimal, w.fatVeg);
+    const anyBad = w.kcal!=null && (dirs.some(d=>d) || balDir);
+    const ic = w.kcal==null ? '<span class="ic pending">•</span>' : anyBad ? '<span class="ic bad">⚠️</span>' : '<span class="ic ok">✓</span>';
+    const fatSub = w.fatAnimal!=null
+      ? `<br><span class="wk-sub ${balClass(balDir)}">${w.fatAnimal}/${w.fatVeg}</span>`
+      : '';
+    const fatCell = `<td class="wk-cell col-f"><span class="${w.fat==null?'muted':devClass(dirs[2])}">${w.fat??'—'}</span>${fatSub}</td>`;
+    return `<tr>
+      <td class="wk-ic">${ic}</td>
+      <td class="wk-day"${w.isToday?' style="color:var(--text);font-weight:700;"':''}>${w.d}</td>
+      ${cellHtml(w.kcal, GOAL.kcal, TOLERANCE.kcal)}
+      <td class="wk-cell col-p ${w.protein==null?'muted':devClass(dirs[1])}">${w.protein??'—'}</td>
+      ${fatCell}
+      <td class="wk-cell col-c ${w.carbs==null?'muted':devClass(dirs[3])}">${w.carbs??'—'}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0;background:var(--surface);">
+      <button class="icon-btn" onclick="shiftWeek(-1)" aria-label="Предыдущая неделя">‹</button>
+      <span style="font-size:13px;font-weight:600;">${weekTitle()}${weekOffset===0?' · эта неделя':''}</span>
+      <button class="icon-btn" onclick="shiftWeek(1)" aria-label="Следующая неделя">›</button>
+    </div>
+    <div style="overflow-x:auto; padding: 4px 16px 10px; background:var(--surface);">
+    <table class="wk-table">
+      <thead>
+        <tr><th></th><th>День</th><th>Ккал</th><th class="col-p">Б</th><th class="col-f">Ж <span class="wk-sub">жив/раст</span></th><th class="col-c">У</th></tr>
+        <tr class="wk-goalrow"><th></th><th>цель</th><th>${GOAL.kcal}</th><th class="col-p">${GOAL.protein}</th><th class="col-f">${GOAL.fat} <span class="wk-sub">${Math.round(GOAL.fat*FAT_BALANCE_TARGET)}/${Math.round(GOAL.fat*(1-FAT_BALANCE_TARGET))}</span></th><th class="col-c">${GOAL.carbs}</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <p class="hint">Красным — выше цели / перекос в животные жиры; жёлтым — ниже цели / перекос в растительные жиры. Дни без записей — «—»</p>`;
+}
+function renderWeek(){
+  document.getElementById('week-list').innerHTML = weekTableHTML();
+}
+
+// ---------- рендер каталога ----------
+let catalogFilter = 'all';
+function renderCatFilter(targetId, filterVar, onSelect){
+  document.getElementById(targetId).innerHTML = CATS.map(([key,label])=>
+    `<span class="chip ${filterVar===key?'on':''}" onclick="${onSelect}('${key}')">${label}</span>`).join('');
+}
+function setCatalogFilter(k){ catalogFilter = k; renderCatalog(); }
+function renderCatalog(){
+  renderCatFilter('cat-filter-catalog', catalogFilter, 'setCatalogFilter');
+  document.getElementById('catalog-list').innerHTML = catalogHTML(catalogFilter);
+}
+const fmtNum = v => String(Math.round((+v || 0) * 100) / 100); // в таблице — не больше 2 знаков после запятой, чтобы число не вылезало из колонки
+function catalogHTML(filter, editable, sourceArray){
+  const src = sourceArray || PRODUCTS;
+  const list = src.filter(p=> filter==='all' || p.cat.includes(filter));
+  const groups = {protein:'Белки', fat:'Жиры', carb:'Углеводы'};
+  let html = '';
+  Object.keys(groups).forEach(g=>{
+    const items = list.filter(p=>p.cat.includes(g));
+    if(!items.length) return;
+    html += `<div class="list-pad cat-section">
+      <table class="ktable cat-table">
+        <colgroup><col class="c-name"><col class="c-unit"><col class="c-kcal"><col class="c-mac"><col class="c-mac"><col class="c-mac"></colgroup>
+        <thead>
+          <tr class="cat-row"><th colspan="6">${groups[g]}</th></tr>
+          <tr class="col-row"><th>Продукт</th><th>Ед.</th><th>Ккал</th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th></tr>
+        </thead>
+        <tbody>`;
+    items.forEach(p=>{
+      if(p.pending){
+        html += `<tr><td colspan="6" style="color:var(--muted)">${p.name} <span class="chip on" style="padding:1px 6px;font-size:10px;margin-left:6px;">на проверке</span></td></tr>`;
+      } else if(p.rejected){
+        const daysLeft = REJECTED_RETENTION_DAYS - (p.rejectedDaysAgo||0);
+        html += `<tr><td colspan="6" style="color:var(--muted)">${p.name} <span class="chip" style="padding:1px 6px;font-size:10px;margin-left:6px;color:var(--over);border-color:var(--over);">отклонено · исчезнет через ${daysLeft} дн.</span></td></tr>`;
+      } else {
+        const unit = p.unit==='piece' ? 'шт' : '100г';
+        const rowAttrs = editable ? ` onclick="openEditProduct(${p.id}, '${sourceArray===PRODUCT_TEMPLATE?'tpl':'cnp'}')" style="cursor:pointer;"` : '';
+        html += `<tr${rowAttrs}><td>${p.name}${editable?' <span class="muted" style="font-size:11px;">✎</span>':''}</td><td class="muted">${unit}</td><td>${fmtNum(p.kcal)}</td><td class="col-p">${fmtNum(p.protein)}</td><td class="col-f">${fmtNum(p.fat)}</td><td class="col-c">${fmtNum(p.carbs)}</td></tr>`;
+      }
+    });
+    html += `</tbody></table></div>`;
+  });
+  return html;
+}
+
+// ---------- новый продукт (форма; общая для клиента 'np' и тренера 'cnp') ----------
+let npPrefix = 'np';
+const $np = s => document.getElementById(npPrefix+'-'+s);
+let npUnit = '100g';
+let npCats = [];
+let npFatType = null;
+function newProductFormHTML(p){
+  return `
+    <label class="np-label">Название</label>
+    <input type="text" id="${p}-name" class="np-input" placeholder="Начни печатать — подскажем КБЖУ" oninput="onNpNameInput()" autocomplete="off">
+    <div id="${p}-suggest" class="suggest-list"></div>
+    <label class="np-label">Указывать значения</label>
+    <div class="chiprow" style="padding:0 0 14px;" id="${p}-unit-chips"></div>
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1;"><label class="np-label">Ккал</label><input type="number" id="${p}-kcal" class="np-input" value="0"></div>
+      <div style="flex:1;"><label class="np-label">Белки, г</label><input type="number" id="${p}-protein" class="np-input" value="0"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:12px;">
+      <div style="flex:1;"><label class="np-label">Жиры, г</label><input type="number" id="${p}-fat" class="np-input" value="0" oninput="onNpFatInput()"></div>
+      <div style="flex:1;"><label class="np-label">Углеводы, г</label><input type="number" id="${p}-carbs" class="np-input" value="0"></div>
+    </div>
+    <div id="${p}-fattype-block" style="display:none;">
+      <label class="np-label">Тип жиров</label>
+      <div class="chiprow" style="padding:0;" id="${p}-fattype-chips"></div>
+    </div>
+    <label class="np-label" style="margin-top:14px;">Категория (источник) — можно несколько</label>
+    <div class="chiprow" style="padding:0;" id="${p}-cat-chips"></div>
+    <p class="hint" id="${p}-error" style="color:var(--over); padding-left:0;"></p>`;
+}
+let npSuggestResults = [];
+function onNpNameInput(){
+  const q = $np('name').value;
+  const pool = editTarget==='template' ? PRODUCT_TEMPLATE : PRODUCTS.filter(p=>!p.rejected);
+  const qn = q.trim().toLowerCase().replace(/ё/g,'е');
+  const existing = qn.length>=2
+    ? pool.filter(p=>p.id!==editingProductId && p.name.toLowerCase().replace(/ё/g,'е').includes(qn)).slice(0,4).map(p=>({...p, exists:true}))
+    : [];
+  const keys = new Set(pool.map(p=>dupKey(p.name)));
+  const fresh = searchFoodDB(q).filter(f=>!keys.has(dupKey(f.name))).slice(0,4);
+  npSuggestResults = existing.concat(fresh);
+  const box = $np('suggest');
+  if(!npSuggestResults.length){ box.innerHTML = ''; box.classList.remove('show'); return; }
+  box.innerHTML = npSuggestResults.map((f,i)=>`
+    <div class="suggest-row" onclick="pickFoodSuggestion(${i})">
+      <span>${f.name}</span>
+      <span class="muted">${f.exists ? '<b>уже есть</b>' : f.kcal+' ккал'+(f.unit==='piece'?' / шт':' / 100г')}</span>
+    </div>`).join('');
+  box.classList.add('show');
+}
+function pickFoodSuggestion(i){
+  const f = npSuggestResults[i];
+  if(!f) return;
+  if(f.exists){ // уже в списке — второй раз добавлять не нужно
+    $np('suggest').innerHTML = ''; $np('suggest').classList.remove('show');
+    $np('error').textContent = `«${f.name}» уже есть в списке — добавлять заново не нужно`;
+    return;
+  }
+  $np('name').value = f.name;
+  $np('kcal').value = f.kcal;
+  $np('protein').value = f.protein;
+  $np('fat').value = f.fat;
+  $np('carbs').value = f.carbs;
+  npUnit = f.unit;
+  npCats = f.cat.slice();
+  npFatType = f.fat>0 ? (f.fatAnimal>0 ? 'animal' : 'veg') : null;
+  $np('suggest').innerHTML = ''; $np('suggest').classList.remove('show');
+  renderNpChips();
+  onNpFatInput();
+}
+let editingProductId = null;
+let editTarget = 'trainee'; // 'trainee' | 'template' — куда сохраняет форма c-screen-newproduct
+function setDeleteVisible(v){ const w = document.getElementById('cnp-delete-wrap'); if(w) w.style.display = v ? 'block' : 'none'; }
+function openNewProduct(prefix){
+  npPrefix = prefix || 'np';
+  setDeleteVisible(false);
+  editTarget = 'trainee';
+  editingProductId = null;
+  npUnit = '100g'; npCats = []; npFatType = null;
+  $np('name').value = '';
+  $np('kcal').value = 0;
+  $np('protein').value = 0;
+  $np('fat').value = 0;
+  $np('carbs').value = 0;
+  $np('error').textContent = '';
+  $np('suggest').innerHTML = ''; $np('suggest').classList.remove('show');
+  onNpFatInput();
+  renderNpChips();
+  if(npPrefix==='cnp'){
+    document.getElementById('cnp-screen-title').textContent = 'Новый продукт';
+    document.getElementById('cnp-screen-hint').textContent = 'Продукт попадёт в базу клиента сразу, без подтверждения';
+    cGo('c-screen-newproduct');
+  } else go('screen-newproduct');
+}
+function openEditProduct(id, ctx){
+  editTarget = ctx==='tpl' ? 'template' : 'trainee';
+  setDeleteVisible(editTarget==='template' && (!MY_ROLE || MY_ROLE==='coach')); // удалять из общей базы может только тренер
+  const arr = editTarget==='template' ? PRODUCT_TEMPLATE : PRODUCTS;
+  const p = arr.find(x=>x.id===id);
+  if(!p) return;
+  npPrefix = 'cnp';
+  editingProductId = id;
+  npUnit = p.unit; npCats = p.cat.slice();
+  npFatType = p.fat>0 ? (p.fatAnimal>0 ? 'animal' : 'veg') : null;
+  $np('name').value = p.name;
+  $np('kcal').value = p.kcal;
+  $np('protein').value = p.protein;
+  $np('fat').value = p.fat;
+  $np('carbs').value = p.carbs;
+  $np('error').textContent = '';
+  $np('suggest').innerHTML = ''; $np('suggest').classList.remove('show');
+  onNpFatInput();
+  renderNpChips();
+  if(editTarget==='template'){
+    document.getElementById('cnp-screen-title').textContent = 'Редактировать шаблон';
+    document.getElementById('cnp-screen-hint').textContent = 'Изменится продукт в общей базе и у новых клиентов; у тех, у кого он уже есть, значения останутся прежними';
+  } else {
+    document.getElementById('cnp-screen-title').textContent = 'Редактировать продукт';
+    document.getElementById('cnp-screen-hint').textContent = 'Изменения сразу применятся у клиента';
+  }
+  cGo('c-screen-newproduct');
+}
+function openNewTemplateProduct(){
+  setDeleteVisible(false);
+  npPrefix = 'cnp';
+  editTarget = 'template';
+  editingProductId = null;
+  npUnit = '100g'; npCats = []; npFatType = null;
+  $np('name').value = '';
+  $np('kcal').value = 0;
+  $np('protein').value = 0;
+  $np('fat').value = 0;
+  $np('carbs').value = 0;
+  $np('error').textContent = '';
+  $np('suggest').innerHTML = ''; $np('suggest').classList.remove('show');
+  onNpFatInput();
+  renderNpChips();
+  document.getElementById('cnp-screen-title').textContent = 'Новый продукт шаблона';
+  document.getElementById('cnp-screen-hint').textContent = 'Появится в общей базе и станет доступен всем клиентам';
+  cGo('c-screen-newproduct');
+}
+function onNpFatInput(){
+  const fat = parseFloat($np('fat').value)||0;
+  $np('fattype-block').style.display = fat>0 ? 'block' : 'none';
+  renderNpFatTypeChips();
+}
+function renderNpFatTypeChips(){
+  $np('fattype-chips').innerHTML = [['animal','Животные'],['veg','Растительные']]
+    .map(([k,l])=>`<span class="chip ${npFatType===k?'on':''}" onclick="setNpFatType('${k}')">${l}</span>`).join('');
+}
+function setNpFatType(t){ npFatType = t; renderNpFatTypeChips(); }
+function renderNpChips(){
+  $np('unit-chips').innerHTML = [['100g','На 100 г'],['piece','За 1 шт / порцию']]
+    .map(([k,l])=>`<span class="chip ${npUnit===k?'on':''}" onclick="setNpUnit('${k}')">${l}</span>`).join('');
+  $np('cat-chips').innerHTML = CATS.filter(([k])=>k!=='all')
+    .map(([k,l])=>`<span class="chip ${npCats.includes(k)?'on':''}" onclick="toggleNpCat('${k}')">${l}</span>`).join('');
+}
+function setNpUnit(u){ npUnit = u; renderNpChips(); }
+function toggleNpCat(c){
+  const i = npCats.indexOf(c);
+  if(i===-1) npCats.push(c); else npCats.splice(i,1);
+  renderNpChips();
+}
+function saveNewProduct(){
+  const byCoach = npPrefix==='cnp';
+  const isTemplate = editTarget==='template';
+  const name = $np('name').value.trim();
+  const err = $np('error');
+  if(!name){ err.textContent = 'Укажи название продукта'; return; }
+  if(!npCats.length){ err.textContent = 'Выбери хотя бы одну категорию'; return; }
+  const kcal = parseFloat($np('kcal').value)||0;
+  const protein = parseFloat($np('protein').value)||0;
+  const fat = parseFloat($np('fat').value)||0;
+  if(fat>0 && !npFatType){ err.textContent = 'Укажи тип жиров — животные или растительные'; return; }
+  const fatAnimal = npFatType==='animal' ? fat : 0;
+  const carbs = parseFloat($np('carbs').value)||0;
+  const arr = isTemplate ? PRODUCT_TEMPLATE : PRODUCTS;
+  { // защита от дублей: такой продукт (с учётом регистра, ё, порядка слов) уже есть
+    const pool = isTemplate ? PRODUCT_TEMPLATE : PRODUCTS.filter(x=>!x.rejected);
+    let dup = findDup(name, pool, editingProductId);
+    if(!dup && !isTemplate && editingProductId==null) dup = findDup(name, PRODUCT_TEMPLATE);
+    if(dup){ err.textContent = `Такой продукт уже есть: «${dup.name}». Добавлять заново не нужно`; return; }
+  }
+  if(editingProductId!=null){
+    const p = arr.find(x=>x.id===editingProductId);
+    if(p) Object.assign(p, { name, cat: npCats.slice(), unit: npUnit, kcal, protein, fat, fatAnimal, carbs });
+    editingProductId = null;
+  } else if(isTemplate){
+    const bid = nextBaseId++;
+    arr.push({ id: bid, baseId: bid, name, cat: npCats.slice(), unit: npUnit, kcal, protein, fat, fatAnimal, carbs });
+  } else {
+    arr.push({ id: nextProductId++, name, cat: npCats.slice(), unit: npUnit, kcal, protein, fat, fatAnimal, carbs,
+               pending: !byCoach, addedBy: byCoach ? 'coach' : 'trainee' });
+  }
+  if(isTemplate){
+    persistTemplate();
+    if(!DB && mergeBaseIntoCatalog()>0) persist(); // локальный режим: новое из общей базы сразу появляется у клиента
+    renderTemplateScreen();
+    cGo('c-screen-template');
+    return;
+  }
+  catalogFilter = 'all';
+  renderCatalog();
+  persist();
+  if(byCoach){
+    cProdTab = 'all';
+    renderCoachProducts(); updateCoachProductsBadge();
+    cGo('c-screen-products');
+  } else {
+    go('screen-products');
+  }
+}
+
+// ---------- добавление в приём пищи ----------
+let addFilter = 'protein';
+let addMealName = 'Завтрак';
+function openAdd(mealName){
+  addMealName = mealName;
+  document.getElementById('addproduct-title').textContent = 'Добавить продукт — ' + mealName;
+  addFilter = 'protein';
+  renderAdd();
+  go('screen-addproduct');
+}
+function setAddFilter(k){ addFilter = k; renderAdd(); }
+function renderAdd(){
+  renderCatFilter('cat-filter-add', addFilter, 'setAddFilter');
+  const t = sumDay(dayObj(currentDay));
+  const nutrientMap = {
+    protein: { label: 'Белки', val: t.protein, goal: GOAL.protein, tol: TOLERANCE.protein },
+    fat:     { label: 'Жиры',  val: t.fat,     goal: GOAL.fat,     tol: TOLERANCE.fat },
+    carb:    { label: 'Углеводы', val: t.carbs, goal: GOAL.carbs, tol: TOLERANCE.carbs },
+  };
+  if(addFilter==='all'){
+    document.getElementById('add-hint').textContent = 'Показаны все продукты, независимо от категории';
+  } else {
+    const nutrient = nutrientMap[addFilter];
+    const dir = deviation(nutrient.val, nutrient.goal, nutrient.tol);
+    const cls = devClass(dir);
+    document.getElementById('add-hint').innerHTML = `${nutrient.label} за день: <span class="${cls}">${Math.round(nutrient.val)}</span> / ${nutrient.goal} г`;
+  }
+  document.getElementById('add-hint').className = 'hint';
+  const items = PRODUCTS.filter(p=> (addFilter==='all' || p.cat.includes(addFilter)) && !p.pending && !p.rejected);
+  document.getElementById('add-list').innerHTML = `<div class="list-pad">` + items.map(p=>{
+      const label = p.unit==='piece' ? `на 1 шт` : `на 100 г`;
+    const val = addFilter==='protein' ? p.protein+' г Б' : addFilter==='fat' ? p.fat+' г Ж' : addFilter==='carb' ? p.carbs+' г У' : `Б${p.protein} Ж${p.fat} У${p.carbs}`;
+    return `<div class="prod-row" onclick="pickProduct(${p.id})" style="cursor:pointer"><span>${p.name}</span><span style="color:var(--muted);font-size:12px;">${val} / ${label}</span></div>`;
+  }).join('') + `</div>`;
+}
+function pickProduct(id){
+  openQuantity(id);
+}
+
+// ---------- экран веса/количества ----------
+let qtyProduct = null;
+let qtyAmount = 100;
+let editingMeal = null;
+let editingIndex = null;
+
+function openQuantity(id){
+  qtyProduct = PRODUCTS.find(p=>p.id===id);
+  qtyAmount = qtyProduct.unit==='piece' ? 1 : 100;
+  editingMeal = null; editingIndex = null;
+  document.getElementById('qty-title').textContent = qtyProduct.name;
+  renderQty();
+  go('screen-quantity');
+}
+function editItem(mealName, idx){
+  const meal = dayObj(currentDay).meals.find(m=>m.name===mealName);
+  const item = meal.items[idx];
+  const prod = PRODUCTS.find(p=>p.name===item.p);
+  if(!prod) return;
+  qtyProduct = prod;
+  qtyAmount = item.w!=null ? item.w : (item.qty!=null ? item.qty : (prod.unit==='piece'?1:100));
+  editingMeal = mealName; editingIndex = idx;
+  addMealName = mealName;
+  document.getElementById('qty-title').textContent = prod.name;
+  renderQty();
+  go('screen-quantity');
+}
+function changeAmount(dir){
+  const step = qtyProduct.unit==='piece' ? 1 : 10;
+  const min = qtyProduct.unit==='piece' ? 1 : 10;
+  qtyAmount = Math.max(min, qtyAmount + dir*step);
+  renderQty();
+}
+function onQtyInput(val){
+  let n = parseInt(val,10);
+  if(isNaN(n) || n<1) n = 1;
+  qtyAmount = n;
+  updateQtyPreview();
+}
+function calcQty(){
+  const factor = qtyProduct.unit==='piece' ? qtyAmount : qtyAmount/100;
+  return {
+    kcal: qtyProduct.kcal*factor, protein: qtyProduct.protein*factor,
+    fat: qtyProduct.fat*factor, fatAnimal: (qtyProduct.fatAnimal||0)*factor, carbs: qtyProduct.carbs*factor
+  };
+}
+function dayTotalsBase(){
+  const day = dayObj(currentDay);
+  let t = sumDay(day);
+  if(editingMeal!=null && editingIndex!=null){
+    const meal = day.meals.find(m=>m.name===editingMeal);
+    const orig = meal ? meal.items[editingIndex] : null;
+    if(orig){
+      t = { kcal:t.kcal-orig.kcal, protein:t.protein-orig.protein, fat:t.fat-orig.fat,
+            fatAnimal:t.fatAnimal-(orig.fatAnimal||0), carbs:t.carbs-orig.carbs };
+    }
+  }
+  return t;
+}
+function updateQtyPreview(){
+  const v = calcQty();
+  const base = dayTotalsBase();
+  const proj = { kcal: base.kcal+v.kcal, protein: base.protein+v.protein, fat: base.fat+v.fat, carbs: base.carbs+v.carbs };
+  const clsFor = (val,goal,tol) => devClass(deviation(val,goal,tol));
+  document.getElementById('qty-preview').innerHTML = `
+    <p class="section-label" style="margin:0 0 6px;">Этот продукт</p>
+    <div class="row"><span>Калории</span><span>${Math.round(v.kcal)} ккал</span></div>
+    <div class="row"><span>Белки</span><span>${Math.round(v.protein)} г</span></div>
+    <div class="row"><span>Жиры</span><span>${Math.round(v.fat)} г</span></div>
+    <div class="row"><span>Углеводы</span><span>${Math.round(v.carbs)} г</span></div>
+    <p class="section-label" style="margin:12px 0 6px;">День с учётом добавления</p>
+    <div class="row"><span>Калории</span><span><span class="${clsFor(proj.kcal,GOAL.kcal,TOLERANCE.kcal)}">${Math.round(proj.kcal)}</span> / ${GOAL.kcal}</span></div>
+    <div class="row"><span>Белки</span><span><span class="${clsFor(proj.protein,GOAL.protein,TOLERANCE.protein)}">${Math.round(proj.protein)}</span> / ${GOAL.protein}</span></div>
+    <div class="row"><span>Жиры</span><span><span class="${clsFor(proj.fat,GOAL.fat,TOLERANCE.fat)}">${Math.round(proj.fat)}</span> / ${GOAL.fat}</span></div>
+    <div class="row"><span>Углеводы</span><span><span class="${clsFor(proj.carbs,GOAL.carbs,TOLERANCE.carbs)}">${Math.round(proj.carbs)}</span> / ${GOAL.carbs}</span></div>`;
+}
+function renderQty(){
+  document.getElementById('qty-value').value = qtyAmount;
+  document.getElementById('qty-unit').textContent = qtyProduct.unit==='piece' ? 'шт' : 'грамм';
+  updateQtyPreview();
+}
+function confirmAdd(){
+  const v = calcQty();
+  const day = dayObj(currentDay);
+  const meal = day.meals.find(m=>m.name===addMealName);
+  const newItem = {
+    p: qtyProduct.name,
+    w: qtyProduct.unit==='piece' ? null : qtyAmount,
+    qty: qtyProduct.unit==='piece' ? qtyAmount : null,
+    kcal: v.kcal, protein: v.protein, fat: v.fat, fatAnimal: v.fatAnimal, carbs: v.carbs,
+  };
+  if(editingMeal!=null && editingIndex!=null){
+    meal.items[editingIndex] = newItem;
+  } else {
+    meal.items.push(newItem);
+  }
+  editingMeal = null; editingIndex = null;
+  renderDay();
+  persist();
+  go('screen-day');
+}
+
+// ---------- сохранение в localStorage (чтобы данные не терялись между визитами) ----------
+const STORAGE_KEY = 'kbju_demo_state_v1';
+// ---------- состояние синхронизации ----------
+let syncInfo = { state: 'local', detail: '', at: null };
+let noWriteAccess = false;
+function escHtml(t){ return String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function roleLabel(){
+  const base = MY_ROLE==='coach' ? 'Тренер' : (MY_ROLE ? 'Клиент' + (MY_NAME ? ' ' + MY_NAME : '') : '—');
+  return adminView ? 'Админ · ' + base : base;
+}
+function setSync(state, detail){
+  if(state==='ok' && noWriteAccess){ state = 'error'; detail = SELF_HOSTED ? 'нет прав на запись' : 'нет прав на запись (режим просмотра) — нужен доступ «Редактор»'; }
+  syncInfo = { state, detail: detail || '', at: state==='ok' ? new Date() : syncInfo.at };
+  const el = document.getElementById('cloud-indicator');
+  if(!el) return;
+  const map = {
+    local:      ['Локально · без синхронизации', 'var(--muted)'],
+    connecting: ['Подключение…', 'var(--muted)'],
+    ok:         ['☁ '+roleLabel()+' · синхронизировано', 'var(--accent)'],
+    error:      ['⚠ Нет синхронизации · подробнее', 'var(--over)'],
+  };
+  const [txt, col] = map[state] || map.local;
+  el.textContent = txt; el.style.color = col; el.style.cursor = 'pointer';
+  el.onclick = showSyncInfo;
+}
+function showModalHtml(html, buttonsHtml){
+  _modalYes = null;
+  document.getElementById('modal-text').innerHTML = html;
+  document.getElementById('modal-buttons').innerHTML = buttonsHtml;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+async function showSyncInfo(){
+  let who = '', email = '', canWrite = null;
+  try{ if(USER){ const me = await USER.me(); who = (me && me.name) || ''; email = (me && me.email) || ''; canWrite = await USER.can('data.write'); } }catch(e){}
+  const rows = [['Режим', DB ? 'облако (общие данные)' : 'локальный: данные только на этом устройстве']];
+  if(MY_ROLE) rows.push(['Роль', roleLabel()]);
+  if(who) rows.push(['Аккаунт', who]);
+  if(email) rows.push(['Почта', email]);
+  if(DB) rows.push(['Права на запись', canWrite===true ? 'есть' : canWrite===false ? (SELF_HOSTED ? 'нет' : 'нет — нужен доступ «Редактор»') : 'не определены']);
+  if(syncInfo.at) rows.push(['Последняя синхронизация', syncInfo.at.toLocaleTimeString('ru-RU')]);
+  if(syncInfo.detail) rows.push([syncInfo.state==='error' ? 'Проблема' : 'Примечание', syncInfo.detail]);
+  const html = '<p style="margin:0 0 8px;font-weight:600;text-align:center;">Состояние приложения</p>' + rows.map(([k,v])=>`<div class="info-row"><span>${escHtml(k)}</span><b>${escHtml(v)}</b></div>`).join('');
+  const canSwitch = DB && !(SELF_HOSTED && !IS_STAFF); // обычному клиенту на своём хостинге менять роль незачем
+  const buttons = (canSwitch ? `<button class="modal-btn" onclick="openRoleGate()">Сменить роль</button>` : '')
+    + (window.BACKEND && window.BACKEND.signOut ? `<button class="modal-btn" onclick="BACKEND.signOut()">Выйти</button>` : '')
+    + `<button class="modal-btn primary" onclick="hideModal()">Закрыть</button>`;
+  showModalHtml(html, buttons);
+}
+
+let goalsUnseen = false; // тренер изменил цели, клиент ещё не открывал экран «Цели»
+let goalsSeen = null;      // цели и допуски, которые клиент видел в последний раз — от них считаем, что изменилось
+let goalsHighlight = null; // что подсветить на экране целей при первом открытии после изменения (только в памяти)
+function computeGoalsDiff(){
+  let baseGoal = null, baseTol = null;
+  if(goalsSeen){ baseGoal = goalsSeen.GOAL; baseTol = goalsSeen.TOLERANCE; }
+  else if(GOAL_HISTORY[1]) baseGoal = GOAL_HISTORY[1].goal; // старые данные без снимка — сравниваем с предыдущей записью истории
+  const goal = {}, tol = {};
+  ['kcal','protein','fat','carbs'].forEach(k=>{
+    if(baseGoal && typeof baseGoal[k]==='number' && baseGoal[k]!==GOAL[k]) goal[k] = { from: baseGoal[k], to: GOAL[k] };
+    if(baseTol && typeof baseTol[k]==='number' && baseTol[k]!==TOLERANCE[k]) tol[k] = { from: baseTol[k], to: TOLERANCE[k] };
+  });
+  return (Object.keys(goal).length || Object.keys(tol).length) ? { goal, tol } : null;
+}
+function markGoalsSeen(){ // клиент открыл цели: запоминаем, что подсветить, и гасим уведомление
+  if(!goalsUnseen) return false;
+  goalsHighlight = computeGoalsDiff();
+  if(adminView && adminView.role==='client') return true; // администратор смотрит за клиента: подсветку показываем, но уведомление клиента не гасим
+  goalsUnseen = false;
+  goalsSeen = { GOAL: {...GOAL}, TOLERANCE: {...TOLERANCE} };
+  persist(); updateGoalsBadge();
+  return true;
+}
+function updateGoalsBadge(){
+  const dot = document.getElementById('goals-dot');
+  if(dot) dot.classList.toggle('show', !!goalsUnseen);
+  // значок на иконке установленного приложения — только на стороне клиента
+  try{
+    const traineeSide = MY_ROLE!=='coach' && document.getElementById('app').style.display!=='none';
+    if(navigator.setAppBadge){
+      if(goalsUnseen && traineeSide) navigator.setAppBadge(1).catch(()=>{});
+      else if(navigator.clearAppBadge) navigator.clearAppBadge().catch(()=>{});
+    }
+  }catch(e){}
+}
+function persist(){
+  const snapshot = { DAYS: daysForSave(), PRODUCTS, GOAL, TOLERANCE, GOAL_HISTORY, nextProductId, goalsUnseen, goalsSeen };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  } catch(e){ /* приватный режим или заполнено хранилище — не критично */ }
+  // в облако пишем только когда данные клиента уже получены — иначе можно затереть чужие свежие данные устаревшим кэшем
+  if(DB && viewSlot && slotLoaded){
+    DB.doc('clients/'+viewSlot).set(snapshot)
+      .then(()=>setSync('ok'))
+      .catch(e=>{ console.error('db write failed', e.code, e.message); setSync('error', 'запись не прошла: '+(e.code||e.message||'ошибка')); });
+  }
+}
+
+// ---------- многопользовательский режим (db + user capabilities) ----------
+let DB = null, USER = null, MY_UID = null, MY_ROLE = null; // MY_ROLE: 'coach' | 'client'
+let IS_ADMIN = false, adminView = null, lastAdminRows = []; // владелец приложения может смотреть глазами любой роли
+const ADMIN_KEY = 'kbju_admin_view_v1';
+let MY_CLIENT_ID = null, MY_NAME = '';                       // у клиента: id его записи, имя
+let viewSlot = null; // id клиента, чьи данные сейчас загружены (у клиента — его собственный)
+const BACKEND_KIND = (window.BACKEND && window.BACKEND.kind) || 'claude'; // 'claude' — страница внутри Claude; 'supabase' — свой хостинг
+const SELF_HOSTED = BACKEND_KIND !== 'claude';
+let IS_STAFF = true; // на своём хостинге роль тренера доступна только сотрудникам из таблицы staff
+const APP_URL = SELF_HOSTED ? location.href.split('#')[0].split('?')[0] : 'https://claude.ai/artifact/K6ku3ZuHPSA52AZ7gvQdAd';
+const clone = o => JSON.parse(JSON.stringify(o)); // снимки облака заморожены: перед изменением всегда копируем
+let unsubSlot = null;
+function applyRemoteState(s){
+  s = clone(s); // данные из облака заморожены — работаем с копией
+  replaceDays(s.DAYS);
+  if(Array.isArray(s.PRODUCTS)){ PRODUCTS.length = 0; s.PRODUCTS.forEach(p=>PRODUCTS.push(p)); }
+  if(s.GOAL) Object.assign(GOAL, s.GOAL);
+  if(s.TOLERANCE) Object.assign(TOLERANCE, s.TOLERANCE);
+  if(Array.isArray(s.GOAL_HISTORY)){ GOAL_HISTORY.length = 0; s.GOAL_HISTORY.forEach(h=>GOAL_HISTORY.push(h)); }
+  if(!GOAL_HISTORY.length) freshGoalHistory().forEach(h=>GOAL_HISTORY.push(h));
+  if(typeof s.nextProductId==='number') nextProductId = s.nextProductId;
+  goalsUnseen = !!s.goalsUnseen;
+  goalsSeen = s.goalsSeen || null;
+}
+function rerenderAll(){
+  renderDay(); renderWeek(); renderCatalog();
+  const goalsOpen = document.getElementById('screen-goals').classList.contains('active');
+  if(goalsOpen){ markGoalsSeen(); renderGoalsView(); } // уже смотрит экран целей — считаем просмотренным, но подсвечиваем новое
+  updateGoalsBadge();
+  const coachCardOpen = document.getElementById('c-screen-card') && document.getElementById('c-screen-card').classList.contains('active');
+  if(coachCardOpen) renderTraineeCardMini();
+  const prodOpen = document.getElementById('c-screen-products') && document.getElementById('c-screen-products').classList.contains('active');
+  if(prodOpen) renderCoachProducts();
+}
+function freshClientState(){ // стартовые данные нового клиента: общая база, пустой дневник, цели по умолчанию
+  return { DAYS: {}, PRODUCTS: cloneTemplate(), GOAL: {...DEFAULT_GOAL}, TOLERANCE: {...DEFAULT_TOLERANCE}, GOAL_HISTORY: freshGoalHistory(),
+    nextProductId: Math.max(0, ...PRODUCT_TEMPLATE.map(p=>p.id)) + 1, goalsUnseen: false,
+    goalsSeen: { GOAL: {...DEFAULT_GOAL}, TOLERANCE: {...DEFAULT_TOLERANCE} } };
+}
+function subscribeSlot(slot){
+  if(!DB) return;
+  if(unsubSlot) unsubSlot();
+  viewSlot = slot; slotLoaded = false;
+  unsubSlot = DB.doc('clients/'+slot).onSnapshot(snap=>{
+    if(snap.metadata.hasPendingWrites) return; // наша же запись — уже применена локально
+    if(!snap.exists){
+      // слот пуст — заводим чистую стартовую точку из шаблона, а не то, что случайно сейчас в памяти
+      applyRemoteState(freshClientState());
+      slotLoaded = true;           // до persist(): иначе защита от устаревшей записи не даст создать документ клиента
+      rerenderAll();
+      persist();
+      syncBaseIntoMyCatalog();
+      return;
+    }
+    applyRemoteState(snap.data());
+    slotLoaded = true;
+    rerenderAll();
+    setSync('ok');
+    syncBaseIntoMyCatalog();
+  }, err=>{ console.error('db sync error', err.code, err.message); setSync('error', 'чтение данных клиента: '+(err.code||err.message||'ошибка')); });
+}
+const ROLE_KEY = 'kbju_role_local_v2';
+function randChars(alphabet, n){
+  const buf = new Uint32Array(n);
+  try{ crypto.getRandomValues(buf); }catch(e){ for(let i=0;i<n;i++) buf[i] = Math.floor(Math.random()*4294967296); }
+  let out = ''; for(let i=0;i<n;i++) out += alphabet[buf[i] % alphabet.length];
+  return out;
+}
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // без похожих символов: 0/O, 1/I
+function deviceId(){
+  const K = 'kbju_device_id_v1';
+  try{ let v = localStorage.getItem(K); if(!v){ v = 'dev-'+randChars('abcdefghijklmnopqrstuvwxyz0123456789', 12); localStorage.setItem(K, v); } return v; }
+  catch(e){ return 'dev-'+randChars('abcdefghijklmnopqrstuvwxyz0123456789', 12); }
+}
+function saveRoleLocal(rec){ try{ localStorage.setItem(ROLE_KEY, JSON.stringify(rec)); }catch(e){} }
+function resetRoleState(){ // перед входом в новую роль отключаемся от прежних данных, чтобы не писать в чужие
+  if(unsubSlot){ unsubSlot(); unsubSlot = null; }
+  if(unsubClients){ unsubClients(); unsubClients = null; }
+  viewSlot = null; slotLoaded = false; COACH_CLIENTS = []; selectedClientId = null;
+}
+async function pickRole(role){ // сюда приходит только 'coach': клиент входит по коду приглашения
+  if(role!=='coach') return;
+  if(SELF_HOSTED && !IS_STAFF){ showToast('У вашего аккаунта нет прав тренера. Их выдаёт администратор (см. инструкцию по запуску, шаг «Назначить тренера»).'); showRoleGate(); return; }
+  document.getElementById('role-gate').style.display = 'none';
+  const rec = { role: 'coach' };
+  saveRoleLocal(rec);
+  if(DB && MY_UID){
+    try{ await DB.doc('roles/'+MY_UID).set(rec); }
+    catch(e){
+      console.error('role write failed', e.code, e.message);
+      setSync('error', 'не удалось сохранить роль: '+(e.code||e.message||'ошибка'));
+      if(SELF_HOSTED){ showToast('Не удалось сохранить роль тренера: '+(e.code||e.message||'ошибка')); showRoleGate(); return; }
+    }
+  }
+  resetRoleState();
+  MY_ROLE = 'coach'; MY_CLIENT_ID = null;
+  enterApp();
+}
+function showJoinForm(){
+  document.getElementById('role-gate').style.display = 'none';
+  document.getElementById('join-gate').style.display = 'flex';
+  const onlyClient = SELF_HOSTED && !IS_STAFF;
+  document.getElementById('join-back').style.display = onlyClient ? 'none' : 'block';
+  document.getElementById('join-signout').style.display = (window.BACKEND && window.BACKEND.signOut) ? 'block' : 'none';
+  document.getElementById('join-error').textContent = '';
+  try{ if(USER) USER.me().then(m=>{ const el = document.getElementById('join-name'); if(m && m.name && !el.value) el.value = m.name; }).catch(()=>{}); }catch(e){}
+}
+function backToRoleGate(){
+  document.getElementById('join-gate').style.display = 'none';
+  showRoleGate();
+}
+function normalizeCode(t){ return String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function joinErrorText(e){ // ответы сервера на вход по коду
+  const m = String((e && e.message) || '');
+  if(/invite_not_found/.test(m)) return 'Код не найден. Проверьте его и введите ещё раз';
+  if(/invite_revoked/.test(m)) return 'Этот код отозван. Попросите тренера выдать новый';
+  if(/invite_used/.test(m)) return 'Этот код уже использован. Попросите тренера выдать новый';
+  if(/client_not_found/.test(m)) return 'Профиль клиента не найден. Попросите тренера создать приглашение заново';
+  if(/name_required/.test(m)) return 'Введите ваше имя';
+  if(/not_authenticated/.test(m)) return 'Войдите в аккаунт и повторите';
+  return 'Не удалось подключиться: ' + (e.code || m || 'ошибка');
+}
+async function submitJoin(){ // клиент вводит код и своё имя — и становится клиентом этого тренера
+  const err = document.getElementById('join-error'), btn = document.getElementById('join-btn');
+  err.textContent = '';
+  const code = normalizeCode(document.getElementById('join-code').value);
+  const name = document.getElementById('join-name').value.trim();
+  if(code.length < 6){ err.textContent = 'Введите код приглашения полностью'; return; }
+  if(!name){ err.textContent = 'Введите ваше имя'; return; }
+  btn.disabled = true;
+  try{
+    if(typeof DB.rpc === 'function'){ // свой сервер: всю проверку кода выполняет сервер одной защищённой операцией
+      let res;
+      try{ res = await DB.rpc('accept_invite', { p_code: code, p_name: name }); }
+      catch(e){ err.textContent = joinErrorText(e); return; }
+      const rec = { role: 'client', clientId: res.clientId, coachUid: res.coachUid };
+      saveRoleLocal(rec);
+      document.getElementById('join-gate').style.display = 'none';
+      resetRoleState();
+      MY_ROLE = 'client'; MY_CLIENT_ID = res.clientId; MY_NAME = name;
+      enterApp();
+      return;
+    }
+    const invSnap = await DB.doc('invites/'+code).get();
+    if(!invSnap.exists){ err.textContent = 'Код не найден. Проверьте его и введите ещё раз'; return; }
+    const inv = clone(invSnap.data());
+    if(inv.revoked){ err.textContent = 'Этот код отозван. Попросите тренера выдать новый'; return; }
+    if(inv.used && inv.usedBy!==MY_UID){ err.textContent = 'Этот код уже использован. Попросите тренера выдать новый'; return; }
+    const metaSnap = await DB.doc('clientsMeta/'+inv.clientId).get();
+    if(!metaSnap.exists){ err.textContent = 'Профиль клиента не найден. Попросите тренера создать приглашение заново'; return; }
+    const meta = clone(metaSnap.data());
+    if(meta.uid && meta.uid!==MY_UID){ try{ await DB.doc('roles/'+meta.uid).delete(); }catch(e){} } // прежний аккаунт этого клиента отвязываем
+    await DB.doc('invites/'+code).set({ ...inv, used: true, usedBy: MY_UID, usedAt: Date.now(), name });
+    await DB.doc('clientsMeta/'+inv.clientId).update({ uid: MY_UID, name, status: 'active', acceptedAt: Date.now(), pendingCode: null });
+    const rec = { role: 'client', clientId: inv.clientId, coachUid: inv.coachUid };
+    await DB.doc('roles/'+MY_UID).set(rec);
+    saveRoleLocal(rec);
+    document.getElementById('join-gate').style.display = 'none';
+    resetRoleState();
+    MY_ROLE = 'client'; MY_CLIENT_ID = inv.clientId; MY_NAME = name;
+    enterApp();
+  }catch(e){
+    console.error('join failed', e.code, e.message);
+    err.textContent = 'Не удалось подключиться: ' + (e.code || e.message || 'ошибка') + (e.code==='permission_denied' ? ' — нужен доступ «Редактор»' : '');
+  }finally{ btn.disabled = false; }
+}
+function showRoleGate(){ // экран выбора роли; владельцу приложения добавляется вход в режим администратора
+  if(SELF_HOSTED && !IS_STAFF){ showJoinForm(); return; } // обычному клиенту выбирать нечего: только вход по коду
+  document.getElementById('gate-admin').style.display = IS_ADMIN ? 'block' : 'none';
+  document.getElementById('role-gate').style.display = 'flex';
+}
+function openRoleGate(){ hideModal(); showRoleGate(); }
+let slotLoaded = false; // данные клиента уже получены из облака — до этого ничего нельзя записывать
+let unsubBase = null;
+function syncBaseIntoMyCatalog(){ // у клиента: общая база обновилась — докладываем новое в его каталог
+  if(MY_ROLE==='coach' || !slotLoaded) return;
+  if(mergeBaseIntoCatalog()>0){ persist(); rerenderAll(); }
+}
+function subscribeBase(){
+  if(!DB || unsubBase) return;
+  unsubBase = DB.doc('shared/base').onSnapshot(snap=>{
+    if(snap.metadata.hasPendingWrites) return;
+    if(!snap.exists){ if(MY_ROLE==='coach') persistTemplate(); return; } // базы ещё нет — первый вход тренера её создаёт
+    const data = snap.data();
+    if(!data || !Array.isArray(data.items)) return;
+    PRODUCT_TEMPLATE.length = 0; clone(data.items).forEach(b=>PRODUCT_TEMPLATE.push(b));
+    if(typeof data.nextBaseId==='number') nextBaseId = Math.max(nextBaseId, data.nextBaseId);
+    normalizeTemplate();
+    try{ localStorage.setItem(TEMPLATE_KEY, JSON.stringify(PRODUCT_TEMPLATE)); }catch(e){}
+    const tpl = document.getElementById('c-screen-template');
+    if(tpl && tpl.classList.contains('active')) renderTemplateScreen();
+    syncBaseIntoMyCatalog();
+    if(MY_ROLE==='coach') setSync('ok');
+  }, err=>{ console.error('base sync error', err.code, err.message); setSync('error', 'общая база: '+(err.code||err.message||'ошибка чтения')); });
+}
+function enterApp(){
+  document.querySelectorAll('.mode-switch .modebtn').forEach(b=>{ b.style.display = 'none'; }); // роль задана аккаунтом — ручное переключение не нужно; строка состояния остаётся
+  if(DB) setSync('connecting');
+  subscribeBase();
+  if(MY_ROLE==='coach'){
+    setMode('coach');
+    subscribeClients();
+  } else {
+    setMode('trainee');
+    subscribeSlot(MY_CLIENT_ID);
+    loadMyName();
+  }
+}
+async function loadMyName(){ // имя клиента для строки состояния (его ввёл сам клиент при входе)
+  try{
+    if(!DB || !MY_CLIENT_ID) return;
+    const m = await DB.doc('clientsMeta/'+MY_CLIENT_ID).get();
+    if(m.exists && m.data() && m.data().name){ MY_NAME = String(m.data().name); setSync(syncInfo.state, syncInfo.detail); }
+  }catch(e){}
+}
+async function readStoredRole(){ // роль аккаунта: из облака, а если там нет — запомненная на устройстве
+  let rec = null;
+  const snap = await DB.doc('roles/'+MY_UID).get().catch(e=>{ setSync('error', 'чтение роли: '+(e.code||e.message||'ошибка')); return null; });
+  if(snap && snap.exists && snap.data() && snap.data().role) rec = clone(snap.data());
+  if(!rec){ try{ rec = JSON.parse(localStorage.getItem(ROLE_KEY)||'null'); }catch(e){ rec = null; } }
+  if(rec && rec.role==='client' && rec.clientId){ // клиент: тренер мог отвязать этот аккаунт
+    const m = await DB.doc('clientsMeta/'+rec.clientId).get().catch(()=>null);
+    if(m && !(m.exists && m.data() && m.data().uid===MY_UID)){ rec = null; try{ localStorage.removeItem(ROLE_KEY); }catch(e){} }
+  }
+  return rec;
+}
+function applyRole(rec){
+  if(rec && rec.role==='coach'){ MY_ROLE = 'coach'; MY_CLIENT_ID = null; enterApp(); return true; }
+  if(rec && rec.role==='client' && rec.clientId){ MY_ROLE = 'client'; MY_CLIENT_ID = rec.clientId; enterApp(); return true; }
+  return false;
+}
+function setAdminButton(){
+  const b = document.getElementById('admin-switch'); if(!b) return;
+  b.classList.toggle('on', !!adminView);
+  b.textContent = adminView ? '⇄ ' + (adminView.role==='coach' ? 'Тренер' : 'Клиент') : '⇄ Роль';
+}
+async function openAdminSwitch(){
+  if(!DB || !IS_ADMIN) return;
+  try{ const q = await DB.collection('clientsMeta').get(); lastAdminRows = q.docs.map(d=>({ id: d.id, ...clone(d.data()) })).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); }catch(e){ lastAdminRows = []; }
+  const cur = adminView || (MY_ROLE==='coach' ? { role:'coach' } : { role:'client', clientId: MY_CLIENT_ID });
+  const btn = (label, js, on) => `<button class="modal-btn${on?' primary':''}" style="width:100%;margin-bottom:6px;text-align:left;padding:10px 12px;" onclick="${js}">${escHtml(label)}${on?' ✓':''}</button>`;
+  let html = `<p style="margin:0 0 6px;font-weight:600;">Режим администратора</p>
+    <p style="font-size:12px;color:var(--text2);margin:0 0 10px;">Смотрите и действуйте глазами выбранной роли. Ваша собственная роль и приглашения не меняются.</p>`
+    + btn('Тренер', "adminSwitch('coach')", cur.role==='coach')
+    + lastAdminRows.map(c=>btn('Клиент: '+c.name, `adminSwitch('client','${c.id}')`, cur.role==='client' && cur.clientId===c.id)).join('');
+  if(!lastAdminRows.length) html += '<p class="hint" style="padding:0;">Клиентов пока нет — создайте приглашение в роли тренера</p>';
+  showModalHtml(html, (adminView ? `<button class="modal-btn" onclick="adminReset()">К своей роли</button>` : '') + `<button class="modal-btn primary" onclick="hideModal()">Закрыть</button>`);
+}
+function adminSwitch(role, cid){
+  hideModal();
+  document.getElementById('role-gate').style.display = 'none';
+  const meta = role==='client' ? lastAdminRows.find(c=>c.id===cid) : null;
+  adminView = role==='coach' ? { role:'coach' } : { role:'client', clientId: cid, name: meta ? meta.name : '' };
+  try{ localStorage.setItem(ADMIN_KEY, JSON.stringify(adminView)); }catch(e){}
+  resetRoleState();
+  goalsHighlight = null;
+  MY_NAME = adminView.name || '';
+  applyRole(adminView);
+  setAdminButton();
+}
+async function adminReset(){ // вернуться к собственной роли аккаунта
+  hideModal();
+  try{ localStorage.removeItem(ADMIN_KEY); }catch(e){}
+  adminView = null; MY_NAME = '';
+  resetRoleState();
+  goalsHighlight = null;
+  const rec = await readStoredRole();
+  if(!applyRole(rec)){ MY_ROLE = null; showRoleGate(); }
+  setAdminButton();
+}
+async function initMultiplayer(){
+  if(window.BACKEND && window.BACKEND.ensureAuth){ try{ await window.BACKEND.ensureAuth(); }catch(e){} } // свой сервер: сначала вход по почте
+  loadPersisted(); // локальный кэш сразу, пока идёт подключение к общей базе
+  if(mergeBaseIntoCatalog()>0) persist();
+  renderDay(); renderWeek(); renderCatalog(); updateGoalsBadge();
+  if(typeof window.claude==='undefined'){ setSync('local', 'страница открыта вне Claude — облако недоступно'); return; }
+  setSync('connecting');
+  try{
+    DB = await window.claude.use('db');
+    USER = await window.claude.use('user');
+  }catch(e){ DB = null; USER = null; }
+  if(!DB || !USER){
+    DB = null;
+    setSync('local', SELF_HOSTED ? 'нет связи с сервером' : 'нет доступа к облаку: не выданы права db/user или вы не вошли в аккаунт Claude');
+    return;
+  }
+  let uid = null;
+  try{ uid = await USER.id(); }catch(e){}
+  MY_UID = uid || deviceId(); // нет аккаунта — работаем под идентификатором устройства
+  try{ if((await USER.can('data.write'))===false) noWriteAccess = true; }catch(e){}
+  if(SELF_HOSTED && USER.isStaff){ try{ IS_STAFF = !!(await USER.isStaff()); }catch(e){ IS_STAFF = false; } }
+  try{ IS_ADMIN = !!(await USER.isOwner()); }catch(e){}
+  if(IS_ADMIN) document.getElementById('admin-switch').style.display = 'inline-block';
+  if(IS_ADMIN){ // сохранённый режим «смотреть как …» важнее обычной роли
+    let ov = null; try{ ov = JSON.parse(localStorage.getItem(ADMIN_KEY)||'null'); }catch(e){}
+    if(ov && ov.role==='client' && ov.clientId){
+      const m = await DB.doc('clientsMeta/'+ov.clientId).get().catch(()=>null);
+      if(!(m && m.exists)) ov = null; else if(m.data() && m.data().name) ov.name = String(m.data().name);
+    }
+    if(ov && (ov.role==='coach' || (ov.role==='client' && ov.clientId))){
+      adminView = ov; MY_NAME = ov.name || '';
+      applyRole(ov);
+    } else { try{ localStorage.removeItem(ADMIN_KEY); }catch(e){} }
+  }
+  if(!adminView){
+    const rec = await readStoredRole();
+    if(!applyRole(rec)) showRoleGate();
+  }
+  setAdminButton();
+  if(!uid && syncInfo.state!=='error') syncInfo.detail = 'аккаунт не определён — используется идентификатор устройства, роль не переносится на другое устройство';
+}
+function loadPersisted(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    replaceDays(saved.DAYS);
+    if(Array.isArray(saved.PRODUCTS)){ PRODUCTS.length = 0; saved.PRODUCTS.forEach(p=>PRODUCTS.push(p)); }
+    if(saved.GOAL) Object.assign(GOAL, saved.GOAL);
+    if(saved.TOLERANCE) Object.assign(TOLERANCE, saved.TOLERANCE);
+    if(Array.isArray(saved.GOAL_HISTORY)){ GOAL_HISTORY.length = 0; saved.GOAL_HISTORY.forEach(h=>GOAL_HISTORY.push(h)); }
+    if(!GOAL_HISTORY.length) freshGoalHistory().forEach(h=>GOAL_HISTORY.push(h));
+    if(typeof saved.nextProductId==='number') nextProductId = saved.nextProductId;
+    goalsUnseen = !!saved.goalsUnseen;
+    goalsSeen = saved.goalsSeen || null;
+  } catch(e){ /* повреждённые данные — просто продолжаем с демо-набором */ }
+}
+function resetDemoData(){
+  showConfirm('Сбросить все изменения и вернуться к демо-данным?', () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+    location.reload();
+  });
+}
+// минимальный service worker — нужен части браузеров (в основном Android/Chrome), чтобы предложить установку на экран
+if('serviceWorker' in navigator){
+  try {
+    const swCode = "self.addEventListener('fetch', () => {});";
+    const swUrl = URL.createObjectURL(new Blob([swCode], { type:'application/javascript' }));
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  } catch(e){}
+}
+
+// ---------- init ----------
+initMultiplayer();
+
+// ================= ТРЕНЕРСКАЯ ЧАСТЬ =================
+function setMode(m){
+  document.getElementById('app').style.display = m==='trainee' ? 'flex' : 'none';
+  document.getElementById('coach-app').style.display = m==='coach' ? 'flex' : 'none';
+  document.getElementById('mode-btn-trainee').classList.toggle('active', m==='trainee');
+  document.getElementById('mode-btn-coach').classList.toggle('active', m==='coach');
+  if(m==='coach') renderCoachTrainees();
+  updateStickyOffsets();
+  resetScroll(0);
+  updateGoalsBadge();
+}
+function cGo(id){
+  document.querySelectorAll('#coach-app .screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  updateStickyOffsets();
+  resetScroll(0);
+  document.querySelectorAll('#coach-app .navitem').forEach(n=>n.classList.remove('active'));
+  if(id==='c-screen-trainees') document.getElementById('c-nav-trainees').classList.add('active');
+  if(id==='c-screen-template') document.getElementById('c-nav-base').classList.add('active');
+}
+// ---------- клиенты тренера: список, приглашения ----------
+let COACH_CLIENTS = [];       // записи clientsMeta этого тренера (из облака)
+let unsubClients = null;
+let selectedClientId = null;
+let selectedTrainee = 'Клиент'; // имя клиента, чья карточка открыта
+function initials(name){ return String(name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase() || '?'; }
+function clientRows(){ return DB ? COACH_CLIENTS : [{ id:'local', name:'Демо-клиент', status:'active', code:'' }]; }
+function subscribeClients(){
+  if(!DB || !MY_UID || unsubClients) return;
+  unsubClients = DB.collection('clientsMeta').onSnapshot(snap=>{ // тренер пока один: все клиенты принадлежат ему (а администратору видны так же)
+    COACH_CLIENTS = snap.docs.map(d=>({ id: d.id, ...clone(d.data()) })).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    renderCoachTrainees();
+    refreshOpenClient();
+    setSync('ok');
+  }, err=>{ console.error('clients sync error', err.code, err.message); setSync('error', 'список клиентов: '+(err.code||err.message||'ошибка')); });
+}
+function clientStatusText(c){
+  if(c.status==='invited') return 'ждёт ввода кода · '+(c.code||'');
+  return c.pendingCode ? 'подключён · выдан новый код '+c.pendingCode : 'подключён';
+}
+function renderCoachTrainees(){
+  const el = document.getElementById('c-trainees-list');
+  if(!el) return;
+  const rows = clientRows();
+  if(!rows.length){
+    el.innerHTML = '<p class="hint">Клиентов пока нет. Нажмите «➕ Пригласить клиента»: приложение выдаст код, который клиент введёт при входе</p>';
+    return;
+  }
+  el.innerHTML = '<div class="list-pad">' + rows.map(c=>`
+    <div class="prod-row" style="cursor:pointer;" onclick="openTraineeCard('${c.id}')">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">${escHtml(initials(c.name))}</div>
+        <div><p style="margin:0;font-size:14px;">${escHtml(c.name)}</p><p style="margin:2px 0 0;font-size:12px;color:${c.status==='invited'?'var(--under)':'var(--muted)'};">${escHtml(clientStatusText(c))}</p></div>
+      </div>
+      <span class="muted">›</span>
+    </div>`).join('') + '</div>';
+}
+function refreshOpenClient(){ // имя/статус могли поменяться (клиент ввёл код и своё имя)
+  if(!selectedClientId) return;
+  const meta = clientRows().find(c=>c.id===selectedClientId);
+  if(!meta) return;
+  selectedTrainee = meta.name;
+  setClientTitles(meta);
+}
+function setClientTitles(meta){
+  document.getElementById('c-card-title').textContent = meta.name;
+  document.getElementById('c-week-title').textContent = 'Неделя — ' + meta.name;
+  document.getElementById('c-goals-name').textContent = meta.name;
+  document.getElementById('c-prod-name').textContent = meta.name;
+  const b = document.getElementById('c-invite-badge');
+  if(b) b.textContent = meta.status==='invited' ? (meta.code||'') : (meta.pendingCode ? meta.pendingCode : '✓');
+}
+async function openTraineeCard(cid){
+  const meta = clientRows().find(c=>c.id===cid) || { id: cid, name: 'Клиент', status: 'active' };
+  selectedClientId = cid; selectedTrainee = meta.name;
+  setClientTitles(meta);
+  viewSlot = cid;
+  subscribeSlot(cid);
+  renderTraineeCardMini();
+  updateCoachProductsBadge();
+  cGo('c-screen-card');
+}
+async function freshCode(){
+  for(let i=0;i<6;i++){
+    const c = randChars(CODE_ALPHABET, 6);
+    const s = await DB.doc('invites/'+c).get();
+    if(!s.exists) return c;
+  }
+  throw new Error('не удалось подобрать код, попробуйте ещё раз');
+}
+async function createInvite(name){ // профиль клиента создаётся сразу: тренер может задать цели ещё до входа клиента
+  const cid = 'c' + randChars('abcdefghijklmnopqrstuvwxyz0123456789', 11), code = await freshCode(), now = Date.now();
+  await DB.doc('clients/'+cid).set(freshClientState());
+  await DB.doc('clientsMeta/'+cid).set({ coachUid: MY_UID, name, uid: null, status: 'invited', code, createdAt: now });
+  await DB.doc('invites/'+code).set({ clientId: cid, coachUid: MY_UID, name, createdAt: now, used: false, usedBy: null });
+  return { cid, code };
+}
+async function reissueInvite(cid){ // новый код для уже созданного клиента (другой аккаунт/устройство); прежний код отзывается
+  const meta = COACH_CLIENTS.find(c=>c.id===cid);
+  if(!meta) throw new Error('клиент не найден');
+  const code = await freshCode(), now = Date.now();
+  if(meta.code){ try{ await DB.doc('invites/'+meta.code).update({ revoked: true }); }catch(e){} }
+  await DB.doc('invites/'+code).set({ clientId: cid, coachUid: MY_UID, name: meta.name, createdAt: now, used: false, usedBy: null });
+  await DB.doc('clientsMeta/'+cid).update(meta.status==='invited' ? { code } : { pendingCode: code });
+  return code;
+}
+function inviteShareText(name, code){
+  if(SELF_HOSTED) return `Привет, ${name}! Приглашаю вас в приложение учёта питания.\n1) Откройте ссылку и создайте аккаунт (почта и пароль): ${APP_URL}\n2) Введите код приглашения: ${code}`;
+  return `Привет, ${name}! Приглашаю вас в приложение учёта питания.\n1) Откройте ссылку и войдите в аккаунт Claude: ${APP_URL}\n2) Нажмите «Я — клиент» и введите код: ${code}`;
+}
+function showInviteCode(name, code){
+  showModalHtml(`<p style="margin:0 0 4px;font-weight:600;">Код приглашения для ${escHtml(name)}</p>
+    <div style="font-size:28px;font-weight:700;letter-spacing:5px;margin:8px 0;">${escHtml(code)}</div>
+    <div id="inv-share" style="font-size:12px;color:var(--text2);white-space:pre-wrap;text-align:left;user-select:all;border:0.5px solid var(--border);border-radius:8px;padding:8px;">${escHtml(inviteShareText(name, code))}</div>
+    ${SELF_HOSTED ? '' : '<p style="font-size:11px;color:var(--muted);margin:8px 0 0;text-align:left;">Клиента нужно ещё пригласить в само приложение: «Поделиться» → e-mail → доступ «Редактор».</p>'}`,
+    `<button class="modal-btn" onclick="copyInviteText(this)">Скопировать текст</button><button class="modal-btn primary" onclick="hideModal()">Готово</button>`);
+}
+function copyInviteText(btn){
+  const el = document.getElementById('inv-share'); if(!el) return;
+  const fallback = ()=>{ try{ const r = document.createRange(); r.selectNodeContents(el); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }catch(e){} btn.textContent = 'Текст выделен — скопируйте'; };
+  try{ navigator.clipboard.writeText(el.textContent).then(()=>{ btn.textContent = 'Скопировано ✓'; }, fallback); }catch(e){ fallback(); }
+}
+function openInviteForm(){
+  if(!DB){ showToast('Приглашения работают только в облачном режиме — когда вверху зелёная строка «синхронизировано»'); return; }
+  showModalHtml(`<p style="margin:0 0 6px;font-weight:600;">Пригласить клиента</p>
+    <p style="font-size:12px;color:var(--text2);margin:0 0 10px;">Имя, под которым клиент будет в вашем списке. При входе клиент подтвердит его сам.</p>
+    <input id="inv-name" class="np-input" placeholder="Имя клиента" autocomplete="off">
+    <p id="inv-err" class="hint" style="color:var(--over);padding:6px 0 0;"></p>`,
+    `<button class="modal-btn" onclick="hideModal()">Отмена</button><button class="modal-btn primary" onclick="submitInvite()">Создать код</button>`);
+}
+async function submitInvite(){
+  const name = document.getElementById('inv-name').value.trim(), err = document.getElementById('inv-err');
+  if(!name){ err.textContent = 'Введите имя клиента'; return; }
+  try{ const { code } = await createInvite(name); showInviteCode(name, code); }
+  catch(e){ console.error('invite failed', e.code, e.message); err.textContent = 'Не удалось создать приглашение: '+(e.code||e.message||'ошибка'); }
+}
+function openClientInvite(){
+  if(!DB){ showToast('Приглашения работают только в облачном режиме'); return; }
+  const meta = COACH_CLIENTS.find(c=>c.id===selectedClientId);
+  if(!meta) return;
+  if(meta.status==='invited'){ showInviteCode(meta.name, meta.code); return; }
+  showModalHtml(`<p style="margin:0 0 6px;font-weight:600;">${escHtml(meta.name)} уже подключён</p>
+    <p style="font-size:12px;color:var(--text2);margin:0;">Если клиенту нужно войти с другого аккаунта или устройства, выдайте новый код. Когда клиент введёт его, прежний аккаунт будет отвязан, а все данные клиента сохранятся.</p>`,
+    `<button class="modal-btn" onclick="hideModal()">Отмена</button><button class="modal-btn primary" onclick="doReissue()">Выдать новый код</button>`);
+}
+async function doReissue(){
+  const meta = COACH_CLIENTS.find(c=>c.id===selectedClientId); if(!meta) return;
+  try{ const code = await reissueInvite(meta.id); showInviteCode(meta.name, code); }
+  catch(e){ console.error('reissue failed', e.code, e.message); showToast('Не удалось выдать код: '+(e.code||e.message||'ошибка')); }
+}
+function renderTraineeCardMini(){
+  document.getElementById('c-week-list').innerHTML = weekTableHTML();
+}
+// ---------- цели (тренер) ----------
+let goalDraft = {}, tolDraft = {};
+const GOAL_FIELDS = [['kcal','Калории','ккал',50],['protein','Белки','г',5],['fat','Жиры','г',5],['carbs','Углеводы','г',5]];
+function openCoachGoals(){
+  goalDraft = {...GOAL}; tolDraft = {...TOLERANCE};
+  renderCoachGoalsForm();
+  cGo('c-screen-goals');
+}
+function renderCoachGoalsForm(){
+  const stepper = (kind,k,label,unit,step) => `
+    <label class="np-label">${label}</label>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <button class="stepbtn" onclick="changeDraft('${kind}','${k}',-${step})">−</button>
+      <div style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px;">
+        ${kind==='t' ? '<span style="font-size:16px;font-weight:600;">±</span>' : ''}
+        <input type="number" inputmode="numeric" min="0" class="step-input" id="cg-${kind}-${k}" value="${(kind==='g'?goalDraft:tolDraft)[k]}" oninput="setDraft('${kind}','${k}',this.value)" onchange="normDraft('${kind}','${k}')">
+        <span style="font-size:12px;color:var(--muted);">${unit}</span>
+      </div>
+      <button class="stepbtn accentbtn" onclick="changeDraft('${kind}','${k}',${step})">+</button>
+    </div>`;
+  document.getElementById('c-goals-form').innerHTML =
+    GOAL_FIELDS.map(([k,l,u])=>stepper('g',k,l,u,10)).join('') +
+    `<p class="hint" style="padding-left:0;">Баланс жиров животные/растительные (~${Math.round(FAT_BALANCE_TARGET*100)}/${Math.round((1-FAT_BALANCE_TARGET)*100)}%) считается автоматически</p>
+     <p class="section-label" style="margin-top:18px;">Допустимое отклонение от цели</p>
+     <p class="hint" style="padding-left:0;margin-bottom:6px;">В этих пределах значение у клиента считается «в норме»</p>` +
+    GOAL_FIELDS.map(([k,l,u,st])=>stepper('t',k,l,u,st)).join('');
+}
+function draftObj(kind){ return kind==='g' ? goalDraft : tolDraft; }
+function setDraft(kind, k, val){ // ввод с клавиатуры: без перерисовки, чтобы не сбивать курсор
+  let n = Math.round(parseFloat(val));
+  if(isNaN(n) || n<0) n = 0;
+  draftObj(kind)[k] = n;
+}
+function normDraft(kind, k){ document.getElementById('cg-'+kind+'-'+k).value = draftObj(kind)[k]; }
+function changeDraft(kind, k, delta){
+  const o = draftObj(kind);
+  o[k] = Math.max(0, o[k]+delta);
+  normDraft(kind, k);
+}
+function saveCoachGoals(){
+  const goalsChanged = JSON.stringify(goalDraft)!==JSON.stringify(GOAL);
+  const tolChanged = JSON.stringify(tolDraft)!==JSON.stringify(TOLERANCE);
+  if((goalsChanged || tolChanged) && !goalsUnseen) goalsSeen = { GOAL: {...GOAL}, TOLERANCE: {...TOLERANCE} }; // что клиент видел до этой правки
+  Object.assign(GOAL, goalDraft); Object.assign(TOLERANCE, tolDraft);
+  if(goalsChanged){
+    const today = dateText(todayISO());
+    if(GOAL_HISTORY[0] && GOAL_HISTORY[0].date===today) GOAL_HISTORY[0].goal = {...GOAL};
+    else GOAL_HISTORY.unshift({ date: today, goal: {...GOAL} });
+    // если за сегодня вернули прежние значения — запись об изменении не нужна
+    if(GOAL_HISTORY.length>1 && JSON.stringify(GOAL_HISTORY[0].goal)===JSON.stringify(GOAL_HISTORY[1].goal)) GOAL_HISTORY.shift();
+  }
+  renderSummary(); renderWeek();
+  renderTraineeCardMini();
+  if(goalsChanged || tolChanged) goalsUnseen = true; // клиенту — красная точка на «Цели», пока не откроет
+  persist();
+  updateGoalsBadge();
+  cGo('c-screen-card');
+  if(goalsChanged || tolChanged) showToast(selectedTrainee + ' получит уведомление об изменении целей');
+}
+// ---------- цели (клиент, просмотр) ----------
+function goalDelta(cur, prev){ // что изменилось относительно предыдущих целей
+  return [['kcal','Ккал'],['protein','Б'],['fat','Ж'],['carbs','У']]
+    .filter(([k])=>cur[k]!==prev[k])
+    .map(([k,n])=>{ const d = cur[k]-prev[k]; return `${n} ${d>0?'+':'−'}${Math.abs(d)}`; });
+}
+function renderGoalsView(){
+  const animal = Math.round(GOAL.fat*FAT_BALANCE_TARGET), veg = GOAL.fat - animal;
+  const hl = goalsHighlight;
+  const NAMES = { kcal:'Ккал', protein:'Б', fat:'Ж', carbs:'У' };
+  const sgn = d => (d>0?'+':'−') + Math.abs(d);
+  const row = (key, label, unit) => {
+    const g = hl && hl.goal[key], t = hl && hl.tol[key];
+    const valHtml = g
+      ? `<span class="chg-old">${g.from}</span> → <b class="chg-new" style="font-size:15px;">${g.to}</b><span class="chg-delta">${sgn(g.to-g.from)}</span>`
+      : `<b style="font-size:15px;">${GOAL[key]}</b>`;
+    const tolHtml = t
+      ? `<span style="font-size:11px;margin-left:8px;"><span class="chg-old">±${t.from}</span> → <b class="chg-new">±${t.to}</b></span>`
+      : `<span style="font-size:11px;color:var(--muted);margin-left:8px;">±${TOLERANCE[key]}</span>`;
+    return `<div class="prod-row${g||t?' chg-row':''}"><span>${label}</span>
+      <span>${valHtml} <span style="font-size:12px;color:var(--muted);">${unit}</span>${tolHtml}</span></div>`;
+  };
+  let banner = '';
+  if(hl){
+    const parts = Object.keys(hl.goal).map(k=>`${NAMES[k]} ${sgn(hl.goal[k].to-hl.goal[k].from)}`)
+      .concat(Object.keys(hl.tol).map(k=>`допуск ${NAMES[k]} ±${hl.tol[k].from} → ±${hl.tol[k].to}`));
+    banner = `<div class="goals-banner"><b>Тренер обновил цели</b><div class="gb-list">${parts.join(' · ')}</div></div>`;
+  }
+  document.getElementById('goals-view').innerHTML = `
+    ${banner}
+    <div class="list-pad">
+      <p class="section-label" style="margin-top:8px;">Действуют с ${(GOAL_HISTORY[0]||{}).date || dateText(todayISO())}</p>
+      ${row('kcal', 'Калории', 'ккал')}
+      ${row('protein', 'Белки', 'г')}
+      ${row('fat', 'Жиры', 'г')}
+      <div class="prod-row" style="padding-left:12px;"><span style="font-size:12px;color:var(--muted);">из них животные / растительные</span><span style="font-size:12px;color:var(--muted);">${animal} / ${veg} г</span></div>
+      ${row('carbs', 'Углеводы', 'г')}
+    </div>
+    <p class="hint">± — допустимое отклонение, его задаёт тренер: в этих пределах значение считается «в норме» (зелёным)</p>
+    <div class="list-pad" style="margin-top:8px;">
+      <p class="section-label" style="margin-top:8px;">История изменений</p>
+      ${GOAL_HISTORY.map((h,i)=>{
+        const prev = GOAL_HISTORY[i+1];
+        const delta = prev ? `<b>${goalDelta(h.goal, prev.goal).join(' · ')}</b>` : '<span style="color:var(--muted);">начальные цели</span>';
+        return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;">${h.date}${i===0?' <span class="chip on" style="padding:1px 6px;font-size:10px;margin-left:4px;">действуют</span>':''}</span>
+            <span style="font-size:12px;color:var(--muted);">${h.goal.kcal} ккал · Б${h.goal.protein} Ж${h.goal.fat} У${h.goal.carbs}</span>
+          </div>
+          <div style="margin-top:4px;font-size:13px;">${delta}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+// ---------- продукты (тренер) ----------
+// ---------- базовый список продуктов (шаблон для новых клиентов) ----------
+function openTemplateScreen(){
+  renderTemplateScreen();
+  cGo('c-screen-template');
+}
+function cancelCoachProductForm(){ // «Отмена» возвращает туда, откуда форму открыли: в общую базу или в продукты клиента
+  const fromBase = editTarget==='template';
+  editingProductId = null;
+  if(fromBase){ renderTemplateScreen(); cGo('c-screen-template'); }
+  else { renderCoachProducts(); cGo('c-screen-products'); }
+}
+function deleteTemplateProduct(){
+  if(MY_ROLE && MY_ROLE!=='coach') return; // только тренер
+  if(editTarget!=='template' || editingProductId==null) return;
+  const b = PRODUCT_TEMPLATE.find(x=>x.id===editingProductId);
+  if(!b) return;
+  showConfirm(`Удалить «${b.name}» из общей базы? У клиентов, у которых этот продукт уже есть, он останется.`, ()=>{
+    const i = PRODUCT_TEMPLATE.findIndex(x=>x.id===b.id);
+    if(i>-1) PRODUCT_TEMPLATE.splice(i, 1);
+    editingProductId = null;
+    persistTemplate();
+    renderTemplateScreen();
+    cGo('c-screen-template');
+  }, 'Удалить');
+}
+function renderTemplateScreen(){
+  document.getElementById('c-template-list').innerHTML = catalogHTML('all', true, PRODUCT_TEMPLATE);
+}
+function updateCoachProductsBadge(){
+  const n = PRODUCTS.filter(p=>p.pending).length;
+  document.getElementById('c-products-badge').textContent = n>0 ? n : '›';
+}
+let cProdTab = 'pending';
+function openCoachProducts(){
+  cProdTab = PRODUCTS.some(p=>p.pending) ? 'pending' : 'all';
+  renderCoachProducts();
+  cGo('c-screen-products');
+}
+function setCProdTab(t){ cProdTab = t; renderCoachProducts(); }
+function renderCoachProducts(){
+  const pending = PRODUCTS.filter(p=>p.pending);
+  document.getElementById('c-prod-tabs').innerHTML =
+    `<span class="chip ${cProdTab==='pending'?'on':''}" onclick="setCProdTab('pending')">На модерации${pending.length?' · '+pending.length:''}</span>
+     <span class="chip ${cProdTab==='all'?'on':''}" onclick="setCProdTab('all')">Все продукты</span>`;
+  if(cProdTab==='all'){
+    document.getElementById('c-products-list').innerHTML = catalogHTML('all', true);
+    return;
+  }
+  if(!pending.length){
+    document.getElementById('c-products-list').innerHTML = `<p class="hint">Нет продуктов на модерации</p>`;
+    return;
+  }
+  document.getElementById('c-products-list').innerHTML = `<div class="list-pad">` + pending.map((p,i)=>`
+    <div style="padding:14px 0; border-bottom:0.5px solid var(--border);">
+      <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:14px;font-weight:600;">${p.name}</span><span style="font-size:12px;color:var(--muted);">на ${p.unit==='piece'?'1 шт':'100 г'}</span></div>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 8px;">${p.kcal} ккал · Б${p.protein} Ж${p.fat} У${p.carbs} · категория: ${p.cat.map(c=>({protein:'белки',fat:'жиры',carb:'углеводы'})[c]).join(', ')}</p>
+      <div style="display:flex; gap:8px;">
+        <button class="add-row-btn" style="flex:1;background:var(--accent-bg);border-radius:8px;padding:8px;color:var(--accent);" onclick="approveProduct(${p.id})">Одобрить</button>
+        <button class="add-row-btn" style="flex:1;border:0.5px solid var(--border);border-radius:8px;padding:8px;" onclick="rejectProduct(${p.id})">Отклонить</button>
+      </div>
+    </div>`).join('') + `</div>`;
+}
+function approveProduct(id){
+  const p = PRODUCTS.find(x=>x.id===id); if(!p) return;
+  p.pending = false;
+  let msg = '', baseChanged = false;
+  if(p.addedBy==='trainee' && p.baseId==null){ // предложен клиентом и одобрен — попадает в общую базу, если такого там ещё нет
+    const dup = findDup(p.name, PRODUCT_TEMPLATE);
+    if(dup){
+      p.baseId = dup.baseId;
+      msg = `«${p.name}» уже есть в общей базе («${dup.name}») — дубль не создан`;
+    } else {
+      const bid = nextBaseId++;
+      PRODUCT_TEMPLATE.push({ id: bid, baseId: bid, name: p.name, cat: p.cat.slice(), unit: p.unit, kcal: p.kcal, protein: p.protein,
+                              fat: p.fat, fatAnimal: p.fatAnimal||0, carbs: p.carbs });
+      p.baseId = bid;
+      baseChanged = true;
+      msg = `«${p.name}» добавлен в общую базу — станет доступен всем клиентам`;
+    }
+  }
+  renderCoachProducts(); updateCoachProductsBadge(); renderCatalog();
+  persist();                          // сначала документ клиента (одобрение), потом общая база — клиент получит их в этом порядке
+  if(baseChanged) persistTemplate();
+  if(msg) showToast(msg);
+}
+function rejectProduct(id){
+  const p = PRODUCTS.find(x=>x.id===id); if(p){ p.pending=false; p.rejected=true; p.rejectedDaysAgo=0; }
+  renderCoachProducts(); updateCoachProductsBadge(); renderCatalog();
+  persist();
+}
+document.getElementById('np-host').innerHTML = newProductFormHTML('np');
+document.getElementById('cnp-host').innerHTML = newProductFormHTML('cnp');
+</script>
+<div id="modal-overlay">
+  <div id="modal-card">
+    <div id="modal-text"></div>
+    <div id="modal-buttons"></div>
+  </div>
+</div>
+
+<script>if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }</script>
+</body>
+</html>

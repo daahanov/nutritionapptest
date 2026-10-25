@@ -1,0 +1,11 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+/index.html
+  Cache-Control: no-cache
+/config.js
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/backend-supabase.js
+  Cache-Control: no-cache
