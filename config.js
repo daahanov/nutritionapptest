@@ -5,6 +5,6 @@
 // Ключ anon можно хранить здесь: он публичный, а данные защищают правила доступа в базе.
 // НИКОГДА не вставляйте сюда ключ service_role.
 window.APP_CONFIG = {
-  supabaseUrl: 'https://ВАШ-ПРОЕКТ.supabase.co',
-  supabaseAnonKey: 'ВАШ-КЛЮЧ-ANON'
+  supabaseUrl: 'https://mcrturjllesfddrdyium.supabase.co',
+  supabaseAnonKey: 'sb_publishable_9Dqo2YFQTrolVTvu95rUQg_BvcpPrJ8'
 };
