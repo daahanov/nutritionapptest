@@ -183,6 +183,16 @@
   th.meal-title-cell { text-align: left !important; font-size: 13px; font-weight: 600; color: var(--text2); padding: 10px 8px 6px !important; }
   .add-row td { text-align: center; padding: 8px !important; }
   .add-row-btn { background: none; border: none; color: var(--accent); font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 2px 0; }
+  #day-summary, #c-day-summary { position: sticky; top: calc(var(--topbar-h) - 1px); z-index: 4; box-shadow: 0 1px 0 var(--border); }
+  .viewtoggle { display: flex; gap: 8px; justify-content: center; padding: 10px 16px 2px; }
+  .meal-tag { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+  .qty-static { display: inline-block; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+  .wk-table tr.wk-row:active td { background: var(--surface2); }  /* цели и набранное закреплены под верхней панелью */
+  .stepchips { display: flex; gap: 6px; align-items: center; justify-content: center; }
+  .stepchips .chip { min-width: 44px; text-align: center; padding: 7px 10px; font-weight: 600; }
+  .step-row td { padding: 4px 6px !important; background: var(--surface2); border-top: none !important; }
+  .inline-stepper { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .stepbtn.sm { width: 36px; height: 36px; font-size: 18px; }
   .stepbtn { width: 40px; height: 40px; border-radius: 50%; border: 0.5px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 20px; cursor: pointer; }
   .stepbtn.accentbtn { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
   .qty-preview { background: var(--surface2); border-radius: 10px; padding: 12px 14px; }
@@ -240,6 +250,7 @@
       <span style="width:28px"></span>
     </div>
     <div class="summary" id="day-summary"></div>
+    <div class="viewtoggle" id="day-viewtoggle"></div>
     <div id="day-meals"></div>
   </div>
 
@@ -317,12 +328,13 @@
       <div style="display:flex; align-items:center; gap:14px; justify-content:center; margin: 10px 0 18px;">
         <button class="stepbtn" onclick="changeAmount(-1)">−</button>
         <div style="text-align:center; min-width:110px;">
-          <input type="number" id="qty-value" value="100" oninput="onQtyInput(this.value)"
+          <input type="number" id="qty-value" value="100" step="any" inputmode="decimal" oninput="onQtyInput(this.value)" onchange="renderQty()"
             style="width:90px; text-align:center; font-size:24px; font-weight:600; border:none; background:transparent; color:var(--text); outline:none;" />
           <div id="qty-unit" style="font-size:12px; color:var(--muted);">грамм</div>
         </div>
         <button class="stepbtn accentbtn" onclick="changeAmount(1)">+</button>
       </div>
+      <div class="stepchips" id="qty-steps" style="margin:-6px 0 18px;"></div>
       <div class="qty-preview" id="qty-preview"></div>
     </div>
   </div>
@@ -383,6 +395,23 @@
       <span style="width:28px"></span>
     </div>
     <div id="c-week-list"></div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: дневник клиента за день (из недели), только просмотр ===== -->
+  <div class="screen" id="c-screen-day">
+    <div class="topbar">
+      <span class="icon-btn" onclick="cGo('c-screen-week')" style="font-size:13px;cursor:pointer;">Неделя</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="icon-btn" onclick="shiftCoachDay(-1)" aria-label="Предыдущий день">‹</button>
+        <span class="title" id="c-day-title">День</span>
+        <button class="icon-btn" onclick="shiftCoachDay(1)" aria-label="Следующий день">›</button>
+      </div>
+      <span style="width:46px"></span>
+    </div>
+    <p class="hint" id="c-day-who" style="padding-top:8px;"></p>
+    <div class="summary" id="c-day-summary"></div>
+    <div class="viewtoggle" id="c-day-viewtoggle"></div>
+    <div id="c-day-meals"></div>
   </div>
 
   <!-- ===== ТРЕНЕР: цели ===== -->
@@ -781,29 +810,70 @@ function sumDay(day){
   day.meals.forEach(m=>m.items.forEach(i=>{t.kcal+=i.kcal;t.protein+=i.protein;t.fat+=i.fat;t.fatAnimal+=(i.fatAnimal||0);t.carbs+=i.carbs;}));
   return t;
 }
-function renderSummary(){
-  const day = dayObj(currentDay);
-  const t = sumDay(day);
+// ---------- категории продуктов в дневнике ----------
+const CAT_ORDER = ['protein','fat','carb','other'];
+const CAT_LABEL = { protein:'🥩 Белки', fat:'🥑 Жиры', carb:'🌾 Углеводы', other:'Прочее' };
+function catOfProduct(p, preferred){ // у продукта может быть несколько категорий: берём ту, через которую его добавили, иначе первую
+  const cats = (p && p.cat) || [];
+  if(preferred && cats.includes(preferred)) return preferred;
+  return cats[0] || 'other';
+}
+function itemCat(item){ // у старых записей категории нет — определяем по каталогу
+  if(item.cat && CAT_LABEL[item.cat]) return item.cat;
+  return catOfProduct(PRODUCTS.find(x=>x.name===item.p));
+}
+const VIEW_KEY = 'kbju_day_view_v1';
+let dayView = 'meals'; // 'meals' — по приёмам пищи, 'cats' — по категориям
+try{ const v = localStorage.getItem(VIEW_KEY); if(v==='meals' || v==='cats') dayView = v; }catch(e){}
+function setDayView(v){
+  if(v!=='meals' && v!=='cats') return;
+  dayView = v;
+  try{ localStorage.setItem(VIEW_KEY, v); }catch(e){}
+  renderDay();
+  if(document.getElementById('c-screen-day').classList.contains('active')) renderCoachDay();
+}
+function viewToggleHTML(){
+  return `<button class="chip${dayView==='meals'?' on':''}" onclick="setDayView('meals')">По приёмам</button>
+          <button class="chip${dayView==='cats'?' on':''}" onclick="setDayView('cats')">По категориям</button>`;
+}
+
+// ---------- заголовок дня: набрано / цель и баланс жиров (с целевым) ----------
+function summaryHTML(t){
   const fatVeg = Math.max(0, t.fat - t.fatAnimal);
-  const balDir = fatBalanceDir(t.fatAnimal, fatVeg);
-  const balCls = balClass(balDir);
-  const dK = deviation(t.kcal, GOAL.kcal, TOLERANCE.kcal);
-  const dP = deviation(t.protein, GOAL.protein, TOLERANCE.protein);
-  const dF = deviation(t.fat, GOAL.fat, TOLERANCE.fat);
-  const dC = deviation(t.carbs, GOAL.carbs, TOLERANCE.carbs);
+  const balCls = balClass(fatBalanceDir(t.fatAnimal, fatVeg));
   const cls = devClass;
-  document.getElementById('day-summary').innerHTML = `
+  const dK = deviation(t.kcal, GOAL.kcal, TOLERANCE.kcal), dP = deviation(t.protein, GOAL.protein, TOLERANCE.protein);
+  const dF = deviation(t.fat, GOAL.fat, TOLERANCE.fat), dC = deviation(t.carbs, GOAL.carbs, TOLERANCE.carbs);
+  const goalAnimal = Math.round(GOAL.fat*FAT_BALANCE_TARGET), goalVeg = GOAL.fat - goalAnimal;
+  return `
     <div><p class="stat-label">Ккал</p><p class="stat-val"><span class="${cls(dK)}">${Math.round(t.kcal)}</span><small>/${GOAL.kcal}</small></p></div>
     <div><p class="stat-label">Белки</p><p class="stat-val"><span class="${cls(dP)}">${Math.round(t.protein)}</span><small>/${GOAL.protein}</small></p></div>
     <div><p class="stat-label">Жиры</p><p class="stat-val"><span class="${cls(dF)}">${Math.round(t.fat)}</span><small>/${GOAL.fat}</small></p></div>
     <div><p class="stat-label">Углев.</p><p class="stat-val"><span class="${cls(dC)}">${Math.round(t.carbs)}</span><small>/${GOAL.carbs}</small></p></div>
-    <div style="grid-column: 1/-1; margin-top:4px;"><p class="stat-label">Баланс жиров (жив/раст)</p><p class="stat-val ${balCls}" style="font-size:13px;">${Math.round(t.fatAnimal)} / ${Math.round(fatVeg)} г</p></div>`;
+    <div style="grid-column: 1/-1; margin-top:4px;"><p class="stat-label">Баланс жиров (жив / раст)</p><p class="stat-val" style="font-size:13px;"><span class="${balCls}">${Math.round(t.fatAnimal)} / ${Math.round(fatVeg)} г</span> <small>· цель ${goalAnimal} / ${goalVeg} г</small></p></div>`;
 }
-function renderDay(){
-  const day = dayObj(currentDay);
-  document.getElementById('day-title').textContent = dayLabel(currentDay);
-  renderSummary();
-  document.getElementById('day-meals').innerHTML = day.meals.map(m=>{
+function renderSummary(){ document.getElementById('day-summary').innerHTML = summaryHTML(sumDay(dayObj(currentDay))); }
+
+// ---------- тело дня: по приёмам или по категориям; одно и то же для клиента (правка) и тренера (просмотр) ----------
+const DAY_COLGROUP = '<colgroup><col class="c-name"><col class="c-qty"><col class="c-mac"><col class="c-mac"><col class="c-mac"><col class="c-del"></colgroup>';
+function itemRowHTML(i, mealName, idx, readonly, tag){
+  const val = i.w!=null ? i.w : i.qty;
+  const unit = i.w!=null ? 'г' : 'шт';
+  const qty = readonly
+    ? `<span class="qty-static">${val}</span>`
+    : `<input type="number" class="inline-qty" value="${val}" oninput="onInlineQtyInput(this)">`;
+  const del = readonly ? '' : `<button class="del-btn" onclick="deleteItem('${mealName}', ${idx})" title="Удалить из дневника" aria-label="Удалить">×</button>`;
+  return `<tr data-meal="${mealName}" data-idx="${idx}">
+      <td>${escHtml(i.p)}${tag ? `<span class="meal-tag">${escHtml(tag)}</span>` : ''}</td>
+      <td class="muted qty-cell">${qty}<span class="qty-unit">${unit}</span></td>
+      <td class="col-p" data-f="protein">${Math.round(i.protein)}</td>
+      <td class="col-f" data-f="fat">${Math.round(i.fat)}</td>
+      <td class="col-c" data-f="carbs">${Math.round(i.carbs)}</td>
+      <td class="del-cell">${del}</td>
+    </tr>`;
+}
+function mealsBodyHTML(day, readonly){
+  return day.meals.map(m=>{
     const mk = m.items.reduce((s,i)=>s+i.kcal,0);
     const titleTxt = m.items.length
       ? `${m.icon} ${m.name} · <span class="meal-kcal">${Math.round(mk)} ккал</span>`
@@ -811,25 +881,70 @@ function renderDay(){
     const headRow = m.items.length
       ? `<tr><th colspan="2" class="meal-title-cell">${titleTxt}</th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th><th class="del-cell"></th></tr>`
       : `<tr><th colspan="6" class="meal-title-cell">${titleTxt}</th></tr>`;
-    const itemRows = m.items.map((i,idx)=>{
-      const val = i.w!=null ? i.w : i.qty;
-      const unit = i.w!=null ? 'г' : 'шт';
-      return `<tr data-meal="${m.name}" data-idx="${idx}">
-        <td>${i.p}</td>
-        <td class="muted qty-cell"><input type="number" class="inline-qty" value="${val}" oninput="onInlineQtyInput(this)"><span class="qty-unit">${unit}</span></td>
-        <td class="col-p" data-f="protein">${Math.round(i.protein)}</td>
-        <td class="col-f" data-f="fat">${Math.round(i.fat)}</td>
-        <td class="col-c" data-f="carbs">${Math.round(i.carbs)}</td>
-        <td class="del-cell"><button class="del-btn" onclick="deleteItem('${m.name}', ${idx})" title="Удалить из дневника" aria-label="Удалить">×</button></td>
-      </tr>`;
-    }).join('');
-    const addRow = `<tr class="add-row"><td colspan="6"><button class="add-row-btn" onclick="openAdd('${m.name}')">+ Добавить продукт</button></td></tr>`;
-    return `<div class="meal"><table class="ktable day-table" data-meal="${m.name}">
-      <colgroup><col class="c-name"><col class="c-qty"><col class="c-mac"><col class="c-mac"><col class="c-mac"><col class="c-del"></colgroup>
+    const itemRows = m.items.map((i,idx)=>itemRowHTML(i, m.name, idx, readonly, null)).join('');
+    const addRow = readonly ? '' : `<tr class="add-row"><td colspan="6"><button class="add-row-btn" onclick="openAdd('${m.name}')">+ Добавить продукт</button></td></tr>`;
+    return `<div class="meal"><table class="ktable day-table" data-meal="${m.name}">${DAY_COLGROUP}
       <thead>${headRow}</thead>
       <tbody>${itemRows}${addRow}</tbody>
     </table></div>`;
   }).join('');
+}
+function catsBodyHTML(day, readonly){
+  const groups = { protein:[], fat:[], carb:[], other:[] };
+  day.meals.forEach(m=>m.items.forEach((i,idx)=>groups[itemCat(i)].push({ i, m, idx })));
+  const tables = CAT_ORDER.filter(c=>groups[c].length).map(c=>{
+    const kc = groups[c].reduce((s,x)=>s+x.i.kcal,0);
+    return `<div class="meal"><table class="ktable day-table" data-cat="${c}">${DAY_COLGROUP}
+      <thead><tr><th colspan="2" class="meal-title-cell">${CAT_LABEL[c]} · <span class="meal-kcal">${Math.round(kc)} ккал</span></th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th><th class="del-cell"></th></tr></thead>
+      <tbody>${groups[c].map(x=>itemRowHTML(x.i, x.m.name, x.idx, readonly, x.m.name)).join('')}</tbody>
+    </table></div>`;
+  }).join('');
+  if(!tables) return '<p class="hint">В этом дне пока нет продуктов</p>';
+  return tables + (readonly ? '' : '<p class="hint">Чтобы добавить продукт, переключитесь на «По приёмам»: он попадёт в нужный приём пищи</p>');
+}
+function dayBodyHTML(day, readonly){ return dayView==='cats' ? catsBodyHTML(day, readonly) : mealsBodyHTML(day, readonly); }
+function refreshDayHeaders(){ // после правки количества пересчитываем ккал в заголовках приёмов/категорий
+  const day = dayObj(currentDay);
+  document.querySelectorAll('#day-meals table.day-table').forEach(t=>{
+    const span = t.querySelector('.meal-kcal'); if(!span) return;
+    let sum = 0;
+    if(t.dataset.meal){ const m = day.meals.find(x=>x.name===t.dataset.meal); sum = m ? m.items.reduce((a,i)=>a+i.kcal,0) : 0; }
+    else if(t.dataset.cat){ day.meals.forEach(m=>m.items.forEach(i=>{ if(itemCat(i)===t.dataset.cat) sum += i.kcal; })); }
+    span.textContent = Math.round(sum) + ' ккал';
+  });
+}
+function renderDay(){
+  closeInlineStepper();
+  const day = dayObj(currentDay);
+  document.getElementById('day-title').textContent = dayLabel(currentDay);
+  renderSummary();
+  updateStickyOffsets();
+  document.getElementById('day-viewtoggle').innerHTML = viewToggleHTML();
+  document.getElementById('day-meals').innerHTML = dayBodyHTML(day, false);
+}
+
+// ---------- тренер: дневник клиента за день (открывается из недели) ----------
+let coachDay = todayISO();
+function coachDayObj(){ const d = DAYS[coachDay]; return d && Array.isArray(d.meals) ? d : { meals: emptyMeals() }; }
+function renderCoachDay(){
+  const day = coachDayObj();
+  document.getElementById('c-day-title').textContent = dayLabel(coachDay);
+  document.getElementById('c-day-who').textContent = 'Дневник клиента ' + selectedTrainee + ' · только просмотр';
+  document.getElementById('c-day-summary').innerHTML = summaryHTML(sumDay(day));
+  document.getElementById('c-day-viewtoggle').innerHTML = viewToggleHTML();
+  document.getElementById('c-day-meals').innerHTML = dayBodyHTML(day, true);
+  updateStickyOffsets();
+}
+function shiftCoachDay(dir){
+  const next = addDays(coachDay, dir);
+  if(daysBetween(todayISO(), next) > MAX_DAYS_AHEAD) return;
+  coachDay = next;
+  renderCoachDay();
+  resetScroll(0);
+}
+function openWeekDay(iso){ // тап по дню в таблице недели: у тренера — дневник клиента (просмотр), у клиента — его день
+  if(document.getElementById('coach-app').style.display==='flex'){ coachDay = iso; renderCoachDay(); cGo('c-screen-day'); }
+  else { currentDay = iso; renderDay(); go('screen-day'); }
 }
 function deleteItem(mealName, idx){
   const meal = dayObj(currentDay).meals.find(m=>m.name===mealName);
@@ -898,6 +1013,50 @@ function copyDayFrom(key){
   if(hasItems) showConfirm(`Заменить текущий рацион дня на рацион из «${dayLabel(key)}»?`, doCopy);
   else doCopy();
 }
+let activeStepRow = null;
+function closeInlineStepper(){ if(activeStepRow){ activeStepRow.remove(); activeStepRow = null; } }
+function inlineUnitOf(tr){
+  const meal = dayObj(currentDay).meals.find(x=>x.name===tr.dataset.meal);
+  const item = meal && meal.items[parseInt(tr.dataset.idx, 10)];
+  return item && item.qty!=null ? 'piece' : 'g';
+}
+function openInlineStepper(tr){ // под строкой продукта — кнопки − / + и выбор шага
+  if(activeStepRow && activeStepRow.previousElementSibling===tr) return;
+  closeInlineStepper();
+  const unit = inlineUnitOf(tr);
+  const row = document.createElement('tr');
+  row.className = 'step-row';
+  row.innerHTML = `<td colspan="6"><div class="inline-stepper">
+      <button class="stepbtn sm" data-dir="-1" aria-label="Меньше">−</button>
+      <div class="stepchips">${stepChipsHTML(unit, 'pickInlineStep')}</div>
+      <button class="stepbtn sm accentbtn" data-dir="1" aria-label="Больше">+</button></div></td>`;
+  row.addEventListener('click', e=>{
+    const b = e.target.closest('button[data-dir]');
+    if(!b) return;
+    const input = tr.querySelector('.inline-qty');
+    const step = currentStep(unit);
+    input.value = Math.max(0, roundAmt((parseFloat(input.value)||0) + parseInt(b.dataset.dir,10)*step));
+    onInlineQtyInput(input);
+  });
+  tr.after(row);
+  activeStepRow = row;
+}
+function pickInlineStep(v){
+  if(!activeStepRow) return;
+  const tr = activeStepRow.previousElementSibling;
+  setStep(inlineUnitOf(tr), v);
+  activeStepRow.querySelectorAll('.stepchips .chip').forEach(c=>c.classList.toggle('on', parseFloat(c.dataset.step)===v));
+}
+document.addEventListener('focusin', e=>{
+  const t = e.target;
+  if(t && t.classList && t.classList.contains('inline-qty')) openInlineStepper(t.closest('tr'));
+});
+document.addEventListener('pointerdown', e=>{ // тап в стороне от строки и её кнопок — убираем кнопки шага
+  if(!activeStepRow) return;
+  const t = e.target;
+  if(t.closest && (t.closest('.step-row') || (t.classList && t.classList.contains('inline-qty')))) return;
+  closeInlineStepper();
+});
 function onInlineQtyInput(inputEl){
   const tr = inputEl.closest('tr');
   const mealName = tr.dataset.meal;
@@ -921,10 +1080,7 @@ function onInlineQtyInput(inputEl){
   tr.querySelector('[data-f="protein"]').textContent = Math.round(item.protein);
   tr.querySelector('[data-f="fat"]').textContent = Math.round(item.fat);
   tr.querySelector('[data-f="carbs"]').textContent = Math.round(item.carbs);
-  const table = tr.closest('table');
-  const mk = meal.items.reduce((s,i)=>s+i.kcal,0);
-  const kcalSpan = table.querySelector('.meal-kcal');
-  if(kcalSpan) kcalSpan.textContent = Math.round(mk)+' ккал';
+  refreshDayHeaders();
   renderSummary();
   persist();
 }
@@ -945,7 +1101,7 @@ function weekTableHTML(){
       ? `<br><span class="wk-sub ${balClass(balDir)}">${w.fatAnimal}/${w.fatVeg}</span>`
       : '';
     const fatCell = `<td class="wk-cell col-f"><span class="${w.fat==null?'muted':devClass(dirs[2])}">${w.fat??'—'}</span>${fatSub}</td>`;
-    return `<tr>
+    return `<tr class="wk-row" onclick="openWeekDay('${w.iso}')" style="cursor:pointer;">
       <td class="wk-ic">${ic}</td>
       <td class="wk-day"${w.isToday?' style="color:var(--text);font-weight:700;"':''}>${w.d}</td>
       ${cellHtml(w.kcal, GOAL.kcal, TOLERANCE.kcal)}
@@ -969,7 +1125,7 @@ function weekTableHTML(){
       <tbody>${rows}</tbody>
     </table>
     </div>
-    <p class="hint">Красным — выше цели / перекос в животные жиры; жёлтым — ниже цели / перекос в растительные жиры. Дни без записей — «—»</p>`;
+    <p class="hint">Красным — выше цели / перекос в животные жиры; жёлтым — ниже цели / перекос в растительные жиры. Дни без записей — «—». Нажмите на день, чтобы открыть дневник</p>`;
 }
 function renderWeek(){
   document.getElementById('week-list').innerHTML = weekTableHTML();
@@ -1298,16 +1454,38 @@ function editItem(mealName, idx){
   renderQty();
   go('screen-quantity');
 }
+// ---------- шаг изменения количества: граммы — по 100 / 10 / 1, штуки — по 1 / 0,5 ----------
+const STEP_KEY = 'kbju_qty_step_v1';
+const STEP_OPTIONS = { g: [100, 10, 1], piece: [1, 0.5] };
+const qtyStepSel = { g: 10, piece: 1 };
+try{
+  const saved = JSON.parse(localStorage.getItem(STEP_KEY) || 'null');
+  if(saved){ ['g','piece'].forEach(k=>{ if(STEP_OPTIONS[k].includes(saved[k])) qtyStepSel[k] = saved[k]; }); }
+}catch(e){}
+const unitKey = unit => unit==='piece' ? 'piece' : 'g';
+function currentStep(unit){ return qtyStepSel[unitKey(unit)]; }
+function setStep(unit, v){
+  const k = unitKey(unit);
+  if(!STEP_OPTIONS[k].includes(v)) return;
+  qtyStepSel[k] = v;
+  try{ localStorage.setItem(STEP_KEY, JSON.stringify(qtyStepSel)); }catch(e){}
+}
+const roundAmt = x => Math.round(x*100)/100;
+function stepChipsHTML(unit, handler){ // кнопки выбора шага; handler — имя функции, получающей выбранный шаг
+  const cur = currentStep(unit);
+  return STEP_OPTIONS[unitKey(unit)].map(v=>`<button class="chip${v===cur?' on':''}" data-step="${v}" onclick="${handler}(${v})">${String(v).replace('.',',')}</button>`).join('');
+}
+function pickQtyStep(v){ setStep(qtyProduct.unit, v); renderQty(); }
 function changeAmount(dir){
-  const step = qtyProduct.unit==='piece' ? 1 : 10;
-  const min = qtyProduct.unit==='piece' ? 1 : 10;
-  qtyAmount = Math.max(min, qtyAmount + dir*step);
+  const step = currentStep(qtyProduct.unit);
+  const min = qtyProduct.unit==='piece' ? 0.5 : 1;
+  qtyAmount = Math.max(min, roundAmt(qtyAmount + dir*step));
   renderQty();
 }
 function onQtyInput(val){
-  let n = parseInt(val,10);
-  if(isNaN(n) || n<1) n = 1;
-  qtyAmount = n;
+  let n = parseFloat(val);
+  if(isNaN(n) || n<=0) n = qtyProduct.unit==='piece' ? 0.5 : 1;
+  qtyAmount = qtyProduct.unit==='piece' ? roundAmt(n) : Math.round(n);
   updateQtyPreview();
 }
 function calcQty(){
@@ -1348,6 +1526,7 @@ function updateQtyPreview(){
     <div class="row"><span>Углеводы</span><span><span class="${clsFor(proj.carbs,GOAL.carbs,TOLERANCE.carbs)}">${Math.round(proj.carbs)}</span> / ${GOAL.carbs}</span></div>`;
 }
 function renderQty(){
+  document.getElementById('qty-steps').innerHTML = stepChipsHTML(qtyProduct.unit, 'pickQtyStep');
   document.getElementById('qty-value').value = qtyAmount;
   document.getElementById('qty-unit').textContent = qtyProduct.unit==='piece' ? 'шт' : 'грамм';
   updateQtyPreview();
@@ -1361,6 +1540,7 @@ function confirmAdd(){
     w: qtyProduct.unit==='piece' ? null : qtyAmount,
     qty: qtyProduct.unit==='piece' ? qtyAmount : null,
     kcal: v.kcal, protein: v.protein, fat: v.fat, fatAnimal: v.fatAnimal, carbs: v.carbs,
+    cat: catOfProduct(qtyProduct, addFilter==='all' ? null : addFilter), // категория, под которой продукт показывается в дневнике
   };
   if(editingMeal!=null && editingIndex!=null){
     meal.items[editingIndex] = newItem;
@@ -1496,6 +1676,7 @@ function applyRemoteState(s){
 }
 function rerenderAll(){
   renderDay(); renderWeek(); renderCatalog();
+  if(document.getElementById('c-screen-day').classList.contains('active')) renderCoachDay();
   const goalsOpen = document.getElementById('screen-goals').classList.contains('active');
   if(goalsOpen){ markGoalsSeen(); renderGoalsView(); } // уже смотрит экран целей — считаем просмотренным, но подсвечиваем новое
   updateGoalsBadge();

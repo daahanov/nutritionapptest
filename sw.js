@@ -1,5 +1,5 @@
-// Сервис-воркер КБЖУ (сборка 34b91b57)
-const CACHE = 'kbju-34b91b57';
+// Сервис-воркер КБЖУ (сборка 9d3f7324)
+const CACHE = 'kbju-9d3f7324';
 const SHELL = ['./', 'index.html', 'config.js', 'backend-supabase.js', 'vendor/supabase.js', 'manifest.webmanifest', 'icons/icon-192.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => null)))).then(() => self.skipWaiting()));
