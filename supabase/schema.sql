@@ -6,7 +6,8 @@
 
 -- ---------- 1. Хранилище документов ----------
 -- Все данные приложения лежат в одной таблице «документов» (путь + JSON).
--- Пути: roles/<uid>, clientsMeta/<id>, clients/<id>, invites/<код>, shared/base
+-- Пути: roles/<uid>, clientsMeta/<id>, clients/<id>, invites/<код>, shared/base,
+--       push/<id> (подписки клиента на уведомления), pushLog/<id> (служебное, только сервер)
 create table if not exists public.docs (
   path        text primary key,
   col         text generated always as (split_part(path, '/', 1)) stored,
@@ -53,22 +54,23 @@ drop policy if exists docs_write_client on public.docs;
 drop policy if exists staff_self_select on public.staff;
 
 -- читать: сотрудники — всё; все вошедшие — общую базу продуктов;
---         каждый — свою запись роли; клиент — свою карточку и свои данные
+--         каждый — свою запись роли; клиент — свою карточку, свои данные и свои подписки на уведомления
 create policy docs_select on public.docs for select to authenticated using (
      public.is_staff()
   or col = 'shared'
   or (col = 'roles' and path = 'roles/' || auth.uid()::text)
-  or (col in ('clients', 'clientsMeta') and public.client_of(split_part(path, '/', 2)))
+  or (col in ('clients', 'clientsMeta', 'push') and public.client_of(split_part(path, '/', 2)))
 );
 
 -- писать: сотрудники — всё
 create policy docs_write_staff on public.docs for all to authenticated
   using (public.is_staff()) with check (public.is_staff());
 
--- писать: клиент — только свои данные (дневник, продукты) в clients/<его id>
+-- писать: клиент — только свои данные (дневник, продукты, замеры) в clients/<его id>
+--         и свои подписки на уведомления в push/<его id>
 create policy docs_write_client on public.docs for all to authenticated
-  using      (col = 'clients' and public.client_of(split_part(path, '/', 2)))
-  with check (col = 'clients' and public.client_of(split_part(path, '/', 2)));
+  using      (col in ('clients', 'push') and public.client_of(split_part(path, '/', 2)))
+  with check (col in ('clients', 'push') and public.client_of(split_part(path, '/', 2)));
 
 -- сотрудник может увидеть свою строку в таблице staff (так приложение узнаёт, что вы тренер/админ)
 create policy staff_self_select on public.staff for select to authenticated using (uid = auth.uid());

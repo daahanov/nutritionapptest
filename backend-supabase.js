@@ -171,8 +171,19 @@
       search: async function () { return []; }
     };
 
+    // вызов серверной функции Supabase (Edge Function), например отправка уведомления
+    async function callFunction(name, body) {
+      var r = await sb.functions.invoke(name, { body: body || {} });
+      if (r.error) {
+        var msg = r.error.message || 'ошибка', ctx = r.error.context;
+        try { if (ctx && typeof ctx.json === 'function') { var j = await ctx.json(); if (j && (j.error || j.message)) msg = j.error || j.message; } } catch (e) { /* ответ не JSON */ }
+        var err = new Error(msg); err.code = r.error.name; throw err;
+      }
+      return r.data;
+    }
+
     return {
-      kind: 'supabase', db: db, user: user, SRC: SRC,
+      kind: 'supabase', db: db, user: user, SRC: SRC, callFunction: callFunction,
       setSession: function (s) { session = s; staffCache = null; },
       getSession: function () { return session; }
     };
@@ -318,7 +329,7 @@
       });
     }
     root.BACKEND = {
-      kind: 'supabase', db: be.db, user: be.user, ensureAuth: ensureAuth,
+      kind: 'supabase', db: be.db, user: be.user, ensureAuth: ensureAuth, callFunction: be.callFunction, vapidPublicKey: String(cfg.vapidPublicKey || ''),
       signOut: function () { return sb.auth.signOut().then(function () { try { ['kbju_demo_state_v1', 'kbju_role_local_v2', 'kbju_admin_view_v1', 'kbju_last_uid_v1'].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) { /* */ } location.reload(); }); }
     };
     // приложение ждёт объект window.claude с возможностями db и user — отдаём ему наши

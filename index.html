@@ -69,6 +69,29 @@
   .nav-dot { display: none; position: absolute; top: -2px; left: calc(50% + 6px); width: 13px; height: 13px; border-radius: 50%;
     background: var(--notify); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--notify); } /* синий с белым кольцом — отличается от красно-белой мишени 🎯 */
   .nav-dot.show { display: block; }
+  .m-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+  .m-table th, .m-table td { padding: 7px 1px; font-size: 12px; text-align: center; vertical-align: top; }
+  .m-table th { font-size: 10.5px; color: var(--text2); font-weight: 600; padding-bottom: 6px; border-bottom: 0.5px solid var(--border); }
+  .m-table tbody td { border-top: 0.5px solid var(--border); }
+  .m-table th:first-child, .m-table td:first-child { text-align: left; padding-left: 4px; }
+  .m-delta { display: block; font-size: 9.5px; color: var(--muted); font-weight: 400; }
+  .m-banner { margin: 10px 16px 0; padding: 10px 12px; border-radius: 10px; font-size: 13px; background: var(--surface2); }
+  .m-banner.eve, .m-banner.now { background: var(--accent-bg); }
+  .m-banner.bad { background: var(--warn-bg); }
+  .m-banner b { font-weight: 700; }
+  .m-sched { padding: 10px 16px 0; }
+  .m-sched .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+  .ch-wrap { padding: 4px 16px 12px; }
+  svg.chart { width: 100%; height: auto; display: block; }
+  .ch-grid { stroke: var(--border); stroke-width: 0.5; }
+  .ch-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .ch-dot { fill: var(--accent); }
+  .ch-dot.sel { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; }
+  .ch-txt { fill: var(--muted); font-size: 10px; }
+  .ch-hit { fill: transparent; cursor: pointer; }
+  .ch-cap { text-align: center; font-size: 13px; margin: 4px 0 2px; min-height: 18px; }
+  .ch-stats { display: flex; justify-content: space-around; font-size: 12px; color: var(--text2); padding: 4px 0 0; text-align: center; }
+  .ch-stats b { display: block; font-size: 14px; color: var(--text); }
   .info-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 6px 0; border-bottom: 0.5px solid var(--border); text-align: left; }
   .info-row span { color: var(--text2); }
   .info-row b { text-align: right; font-weight: 600; }
@@ -155,15 +178,20 @@
   .del-btn { background: none; border: none; color: var(--muted); font-size: 18px; line-height: 1; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; }
   .del-btn:hover, .del-btn:active { color: var(--over); background: var(--surface2); }
   .day-table { table-layout: fixed; width: 100%; }
-  .day-table col.c-qty { width: 76px; }
-  .day-table col.c-mac { width: 34px; }
-  .day-table col.c-del { width: 28px; }
+  .day-table col.c-qty { width: 86px; }
+  .day-table col.c-kcal { width: 38px; }
+  .day-table col.c-mac { width: 31px; }
+  .day-table col.c-del { width: 26px; }
+  .day-table td.kcal-cell, .day-table th.col-k { text-align: right; padding-right: 3px; font-variant-numeric: tabular-nums; }
+  .day-table td.kcal-cell { color: var(--text); font-weight: 600; }
+  .day-table th.col-k { font-size: 11px; color: var(--text2); }
+  #day-meals .meal, #c-day-meals .meal { padding-left: 8px; padding-right: 8px; }
   .day-table td { padding: 7px 2px; font-size: 12.5px; }
   .day-table td:first-child { padding-left: 0; text-align: left; overflow-wrap: anywhere; line-height: 1.25; }
   .day-table td.qty-cell { white-space: nowrap; text-align: right; }
-  .day-table .qty-unit { display: inline-block; width: 20px; text-align: left; padding-left: 3px; }
+  .day-table .qty-unit { display: inline-block; width: 24px; text-align: left; padding-left: 3px; font-size: 13px; font-weight: 600; color: var(--text); }
   .day-table th { padding-left: 2px; padding-right: 2px; }
-  .inline-qty { width: 40px; border: none; background: transparent; color: var(--muted); font-size: 12.5px; text-align: right; outline: none; font-family: inherit; }
+  .inline-qty { width: 48px; border: none; background: transparent; color: var(--text); font-size: 16px; font-weight: 700; text-align: right; outline: none; font-family: inherit; }
   .inline-qty { -moz-appearance: textfield; font-variant-numeric: tabular-nums; }
   .inline-qty::-webkit-outer-spin-button, .inline-qty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .inline-qty:focus { color: var(--text); border-bottom: 1px solid var(--accent); }
@@ -186,7 +214,7 @@
   #day-summary, #c-day-summary { position: sticky; top: calc(var(--topbar-h) - 1px); z-index: 4; box-shadow: 0 1px 0 var(--border); }
   .viewtoggle { display: flex; gap: 8px; justify-content: center; padding: 10px 16px 2px; }
   .meal-tag { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
-  .qty-static { display: inline-block; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+  .qty-static { display: inline-block; min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 700; color: var(--text); }
   .wk-table tr.wk-row:active td { background: var(--surface2); }  /* цели и набранное закреплены под верхней панелью */
   .stepchips { display: flex; gap: 6px; align-items: center; justify-content: center; }
   .stepchips .chip { min-width: 44px; text-align: center; padding: 7px 10px; font-weight: 600; }
@@ -249,12 +277,39 @@
       </div>
       <span style="width:28px"></span>
     </div>
+    <div id="day-measure-banner"></div>
     <div class="summary" id="day-summary"></div>
     <div class="viewtoggle" id="day-viewtoggle"></div>
     <div id="day-meals"></div>
   </div>
 
   <!-- ===== ЭКРАН: НЕДЕЛЯ ===== -->
+  <div class="screen" id="screen-measures">
+    <div class="topbar">
+      <span style="width:28px"></span>
+      <span class="title">Замеры</span>
+      <button class="icon-btn accent" onclick="openMeasureForm()" aria-label="Добавить замеры">+</button>
+    </div>
+    <div id="measure-banner"></div>
+    <div id="measure-actions"></div>
+    <div id="push-card"></div>
+    <div class="viewtoggle" id="measure-viewtoggle"></div>
+    <div id="measure-body"></div>
+  </div>
+
+  <div class="screen" id="screen-measure-form">
+    <div class="topbar">
+      <span class="icon-btn" onclick="go('screen-measures')" style="font-size:13px;cursor:pointer;">Отмена</span>
+      <span class="title" id="mf-title">Новые замеры</span>
+      <span class="icon-btn accent" onclick="saveMeasure()" style="font-size:13px;font-weight:600;cursor:pointer;">Сохранить</span>
+    </div>
+    <p class="hint" style="padding-top:10px;">Утром, натощак. Заполните то, что измерили: хотя бы одно значение</p>
+    <div class="list-pad" id="mf-fields" style="padding-top:4px;"></div>
+    <div class="list-pad" id="mf-del-wrap" style="display:none; padding-bottom:24px;">
+      <button class="modal-btn" style="width:100%; padding:12px; color:var(--over); border-color:var(--over);" onclick="deleteMeasure()">Удалить эти замеры</button>
+    </div>
+  </div>
+
   <div class="screen" id="screen-week">
     <div class="topbar">
       <span style="width:28px"></span>
@@ -343,6 +398,7 @@
     <button class="navitem active" id="nav-day" onclick="go('screen-day')"><span class="ic">📔</span>День</button>
     <button class="navitem" id="nav-week" onclick="go('screen-week')"><span class="ic">📅</span>Неделя</button>
     <button class="navitem" id="nav-products" onclick="go('screen-products')"><span class="ic">🍎</span>Продукты</button>
+    <button class="navitem" id="nav-measures" onclick="go('screen-measures')"><span class="ic">⚖️</span><i class="nav-dot" id="measure-dot"></i>Замеры</button>
     <button class="navitem" id="nav-goals" onclick="go('screen-goals')"><span class="ic">🎯</span><i class="nav-dot" id="goals-dot"></i>Цели</button>
   </div>
 </div>
@@ -357,6 +413,7 @@
     </div>
     <div class="list-pad" style="padding-bottom:0;">
       <div class="prod-row" style="cursor:pointer;" onclick="openInviteForm()"><span>➕ Пригласить клиента</span><span class="muted">›</span></div>
+      <div class="prod-row" id="c-backup-row" style="cursor:pointer;display:none;" onclick="openBackupDialog()"><span>💾 Резервная копия данных</span><span class="muted" id="c-backup-sub" style="font-size:11px;"></span></div>
     </div>
     <div id="c-trainees-list"></div>
   </div>
@@ -382,9 +439,24 @@
     <div class="list-pad">
       <div class="prod-row" style="cursor:pointer;" onclick="openClientInvite()"><span>🔗 Приглашение клиента</span><span class="muted" id="c-invite-badge">›</span></div>
       <div class="prod-row" style="cursor:pointer;" onclick="cGo('c-screen-week')"><span>📅 Неделя</span><span class="muted">›</span></div>
+      <div class="prod-row" style="cursor:pointer;" onclick="openCoachMeasures()"><span>⚖️ Замеры</span><span class="muted" id="c-measure-sub" style="font-size:11px;">›</span></div>
       <div class="prod-row" style="cursor:pointer;" onclick="openCoachGoals()"><span>🎯 Цели по КБЖУ</span><span class="muted">›</span></div>
       <div class="prod-row" style="cursor:pointer;" onclick="openCoachProducts()"><span>🍎 Продукты</span><span class="muted" id="c-products-badge">›</span></div>
     </div>
+  </div>
+
+  <!-- ===== ТРЕНЕР: замеры клиента (график замеров, таблица, частота) ===== -->
+  <div class="screen" id="c-screen-measures">
+    <div class="topbar">
+      <button class="icon-btn" onclick="cGo('c-screen-card')">‹</button>
+      <span class="title" id="c-measure-title">Замеры</span>
+      <span style="width:28px"></span>
+    </div>
+    <div class="m-sched" id="c-measure-sched"></div>
+    <div id="c-measure-banner"></div>
+    <div id="c-push-status"></div>
+    <div class="viewtoggle" id="c-measure-viewtoggle"></div>
+    <div id="c-measure-body"></div>
   </div>
 
   <!-- ===== ТРЕНЕР: неделя (полная таблица) ===== -->
@@ -484,8 +556,9 @@ function emptyMeals(){ return [ {name:'Завтрак',icon:'☀️',items:[]}, 
 // ---------- стартовые данные ----------
 const GOAL = { kcal: 1800, protein: 120, fat: 60, carbs: 190 };
 const DEFAULT_GOAL = { ...GOAL };
-function freshGoalHistory(){ return [ { date: dateText(todayISO()), goal: { ...DEFAULT_GOAL } } ]; } // новые сверху
-const GOAL_HISTORY = freshGoalHistory();
+const GOAL_EPOCH = '1970-01-01'; // «с самого начала»: первые цели действуют и за любые прошлые дни
+function freshGoalHistory(){ return [ { date: dateText(todayISO()), from: GOAL_EPOCH, goal: { ...DEFAULT_GOAL }, tol: { ...DEFAULT_TOLERANCE } } ]; } // новые сверху; from — с какого дня цели вступили в силу
+const GOAL_HISTORY = [];
 const REJECTED_RETENTION_DAYS = 7; // сколько дней отклонённый продукт ещё виден в списке, прежде чем пропасть
 
 
@@ -723,6 +796,27 @@ function replaceDays(src){ // целиком заменяем дневник (и
 // Допустимое отклонение от цели — настраивает тренер персонально для клиента
 const TOLERANCE = { kcal: 100, protein: 10, fat: 8, carbs: 15 };
 const DEFAULT_TOLERANCE = { ...TOLERANCE };
+freshGoalHistory().forEach(h=>GOAL_HISTORY.push(h));
+function goalsSigOf(g, t){ g = g || {}; t = t || {}; return JSON.stringify([g.kcal, g.protein, g.fat, g.carbs, t.kcal, t.protein, t.fat, t.carbs]); }
+function normalizeGoalHistory(){ // у записей из прежних версий нет даты вступления в силу и допусков
+  const H = GOAL_HISTORY, n = H.length;
+  if(!n){ freshGoalHistory().forEach(h=>H.push(h)); return; }
+  H.forEach((h, i)=>{
+    if(!h.goal) h.goal = { ...GOAL };
+    if(!h.tol) h.tol = { ...TOLERANCE };
+    if(!ISO_RE.test(h.from || '')) h.from = (i===0 && n>1) ? todayISO() : addDays(GOAL_EPOCH, n-1-i);
+  });
+  H.sort((a, b)=> a.from < b.from ? 1 : a.from > b.from ? -1 : 0);   // новые сверху
+  H[0].goal = { ...GOAL }; H[0].tol = { ...TOLERANCE };              // верхняя запись — текущие цели
+}
+// Цели и допуски, действовавшие в конкретный день: прошлые дни оцениваются по тогдашним целям
+function normsFor(iso){
+  for(const h of GOAL_HISTORY){
+    if(h.from <= iso) return h===GOAL_HISTORY[0] ? { goal: GOAL, tol: TOLERANCE } : { goal: h.goal, tol: h.tol || TOLERANCE };
+  }
+  const last = GOAL_HISTORY[GOAL_HISTORY.length-1];   // день раньше самой первой записи — по самым первым целям
+  return last && last!==GOAL_HISTORY[0] ? { goal: last.goal, tol: last.tol || TOLERANCE } : { goal: GOAL, tol: TOLERANCE };
+}
 const FAT_BALANCE_TARGET = 0.4; // доля животных жиров от общего, ~40/60
 const FAT_BALANCE_TOL = 0.12;
 
@@ -797,12 +891,404 @@ function go(id){
   if(id==='screen-day') document.getElementById('nav-day').classList.add('active');
   if(id==='screen-week') document.getElementById('nav-week').classList.add('active');
   if(id==='screen-products') document.getElementById('nav-products').classList.add('active');
+  if(id==='screen-measures'){ document.getElementById('nav-measures').classList.add('active'); renderMeasures(); }
   if(id==='screen-goals'){
     document.getElementById('nav-goals').classList.add('active');
     markGoalsSeen();      // просмотрели — бейдж гаснет, изменения подсвечиваются
     renderGoalsView();
   }
 }
+
+// ====================== ЗАМЕРЫ ======================
+const MEASURE_VIEW_KEY = 'kbju_measure_view_v1';
+let measureView = 'table';   // 'table' | 'charts'
+try{ const v = localStorage.getItem(MEASURE_VIEW_KEY); if(v==='table' || v==='charts') measureView = v; }catch(e){}
+let measureMetric = 'weight', chartSel = null, editingMeasure = null;
+const EVENING_HOUR = 18;     // с этого часа накануне приложение напоминает про завтрашние замеры
+const MONTHS_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const fmtVal = v => String(Math.round(v*100)/100).replace('.', ',');
+function dateShort(iso){ const d = parseISO(iso); return d.getDate()+' '+MONTHS_SHORT[d.getMonth()] + (d.getFullYear()!==new Date().getFullYear() ? ' '+String(d.getFullYear()).slice(2) : ''); }
+
+// --- расписание: первые замеры клиент делает, когда ему удобно; дальше дни замеров = дата первых + k * every ---
+function lastDueOnOrBefore(iso){
+  const { every, anchor } = MEASURE_SCHEDULE;
+  if(!every || !anchor || anchor>iso) return null;
+  return addDays(anchor, Math.floor(daysBetween(anchor, iso)/every)*every);
+}
+function nextDueAfter(iso){
+  const { every, anchor } = MEASURE_SCHEDULE;
+  if(!every || !anchor) return null;
+  if(anchor>iso) return anchor;
+  return addDays(anchor, (Math.floor(daysBetween(anchor, iso)/every)+1)*every);
+}
+const measuredFor = due => MEASURES.some(m=>m.date >= addDays(due, -1)); // замеры на день раньше тоже засчитываются
+function adoptAnchor(){ // график начинается с первых замеров, внесённых после того, как тренер его включил
+  const S = MEASURE_SCHEDULE;
+  if(!S.every || S.anchor) return;
+  const first = MEASURES.find(m=>!S.since || m.date >= S.since);
+  if(first) S.anchor = first.date;
+}
+function measureInfo(now){
+  now = now || new Date();
+  const today = isoDate(now), hour = now.getHours();
+  const { every, anchor } = MEASURE_SCHEDULE;
+  if(!every) return { on:false, any:false };
+  if(!anchor) return { on:true, waiting:true, every, any:false }; // первых замеров ещё не было: напоминаний нет
+  const last = lastDueOnOrBefore(today), next = nextDueAfter(today);
+  const info = { on:true, every, today, next, any:false };
+  if(last){
+    if(last===today){ if(measuredFor(last)) info.doneToday = true; else info.dueToday = true; }
+    else if(!measuredFor(last)) info.overdue = { date: last, days: daysBetween(last, today) };
+  }
+  info.eve = next===addDays(today,1) && hour>=EVENING_HOUR && !measuredFor(next);
+  info.any = !!(info.dueToday || info.overdue || info.eve);
+  return info;
+}
+function nextDueText(info){
+  const d = info.dueToday ? info.today : info.next;
+  return d ? WD_SHORT[parseISO(d).getDay()] + ', ' + dateText(d) : '';
+}
+const EVERY_TEXT = { 7: 'раз в неделю', 14: 'раз в две недели' };
+function measureBannerHTML(info, forCoach){
+  if(!info.on) return forCoach ? '<div class="m-banner">Замеры для этого клиента не настроены</div>' : '';
+  if(info.waiting) return forCoach
+    ? `<div class="m-banner">Клиент ещё не сделал первые замеры: график (${EVERY_TEXT[info.every]}) начнётся с них</div>`
+    : `<div class="m-banner">Тренер назначил замеры <b>${EVERY_TEXT[info.every]}</b>. Сделайте первые, когда вам удобно: дальше напомним по графику</div>`;
+  const L = [];
+  if(info.overdue) L.push(`<div class="m-banner bad">Замеры за <b>${dateText(info.overdue.date)}</b> не внесены${info.overdue.days>0 ? ' (просрочены на '+info.overdue.days+' дн.)' : ''}</div>`);
+  if(info.dueToday) L.push(`<div class="m-banner now"><b>Сегодня день замеров.</b> Утром, натощак</div>`);
+  if(info.eve && !forCoach) L.push(`<div class="m-banner eve"><b>Завтра утром нужно сделать замеры.</b> ${nextDueText(info)}</div>`);
+  if(!L.length) L.push(`<div class="m-banner">Следующие замеры: <b>${nextDueText(info)}</b>${info.doneToday ? ' (сегодняшние уже внесены)' : ''}</div>`);
+  return L.join('');
+}
+function renderDayMeasureBanner(){
+  const el = document.getElementById('day-measure-banner'); if(!el) return;
+  const info = measureInfo();
+  if(MY_ROLE==='coach' || !info.any){ el.innerHTML = ''; return; }
+  el.innerHTML = `<div onclick="go('screen-measures')" style="cursor:pointer;">${measureBannerHTML({ ...info, next: info.next }, false).replace(/<div class="m-banner[^"]*">Следующие[^]*$/, '')}</div>`;
+}
+
+// --- таблица и график ---
+function measuresTableHTML(readonly){
+  if(!MEASURES.length) return '<p class="hint">Замеров пока нет'+(readonly ? '' : '. Нажмите «+» вверху, чтобы внести первые')+'</p>';
+  const head = ['Дата'].concat(MEASURE_FIELDS.map(f=>f.label.replace(' ', '<br>'))).map(h=>`<th>${h}</th>`).join('');
+  const rows = MEASURES.slice().reverse().map((m, ri)=>{
+    const idx = MEASURES.length-1-ri, prev = MEASURES[idx-1];
+    const cells = MEASURE_FIELDS.map(f=>{
+      const v = m[f.k], pv = prev ? prev[f.k] : null;
+      const d = (typeof v==='number' && typeof pv==='number') ? Math.round((v-pv)*100)/100 : null;
+      return `<td>${typeof v==='number' ? fmtVal(v) : '—'}${d ? `<small class="m-delta">${d>0 ? '+' : '−'}${fmtVal(Math.abs(d))}</small>` : ''}</td>`;
+    }).join('');
+    return `<tr data-date="${m.date}"${readonly ? '' : ` onclick="openMeasureForm('${m.date}')" style="cursor:pointer;"`}><td>${dateShort(m.date)}</td>${cells}</tr>`;
+  }).join('');
+  return `<div class="list-pad"><table class="ktable m-table"><colgroup><col style="width:17%">${MEASURE_FIELDS.map(()=>'<col style="width:13.8%">').join('')}</colgroup><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>${readonly ? '' : '<p class="hint" style="padding-left:0">Нажмите на строку, чтобы изменить или удалить замеры. Мелкие цифры — изменение к предыдущему замеру</p>'}</div>`;
+}
+function chartSVG(pts, unit){
+  const W = 320, H = 190, L = 40, R = 14, T = 14, B = 28;
+  const vals = pts.map(p=>p.v), lo0 = Math.min(...vals), hi0 = Math.max(...vals), pad = (hi0-lo0)*0.18 || 1;
+  const lo = lo0-pad, hi = hi0+pad;
+  const t0 = parseISO(pts[0].date).getTime(), t1 = parseISO(pts[pts.length-1].date).getTime();
+  const x = d => t1===t0 ? (L + (W-L-R)/2) : L + (parseISO(d).getTime()-t0)/(t1-t0)*(W-L-R);
+  const y = v => T + (1-(v-lo)/(hi-lo))*(H-T-B);
+  const grid = [0,1,2,3].map(i=>{ const v = lo + (hi-lo)*i/3; return `<line class="ch-grid" x1="${L}" x2="${W-R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="ch-txt" x="${L-5}" y="${(y(v)+3.5).toFixed(1)}" text-anchor="end">${fmtVal(Math.round(v*10)/10)}</text>`; }).join('');
+  const line = pts.length>1 ? `<polyline class="ch-line" points="${pts.map(p=>x(p.date).toFixed(1)+','+y(p.v).toFixed(1)).join(' ')}"/>` : '';
+  const sel = chartSel!=null && chartSel<pts.length ? chartSel : pts.length-1;
+  const dots = pts.map((p,i)=>`<circle class="ch-dot${i===sel?' sel':''}" cx="${x(p.date).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${i===sel?4.5:3.5}"/><circle class="ch-hit" data-i="${i}" cx="${x(p.date).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="14" onclick="pickChartPoint(${i})"/>`).join('');
+  const idxs = pts.length>=3 ? [0, Math.floor((pts.length-1)/2), pts.length-1] : pts.map((_,i)=>i);
+  const xl = [...new Set(idxs)].map((i,k,a)=>`<text class="ch-txt" x="${x(pts[i].date).toFixed(1)}" y="${H-8}" text-anchor="${i===0 && a.length>1 ? 'start' : i===pts.length-1 && a.length>1 ? 'end' : 'middle'}">${dateShort(pts[i].date)}</text>`).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="График замеров">${grid}${line}${dots}${xl}</svg>`;
+}
+function measuresChartsHTML(){
+  const chips = MEASURE_FIELDS.map(f=>`<button class="chip${f.k===measureMetric?' on':''}" onclick="setMeasureMetric('${f.k}')">${f.label}</button>`).join('');
+  const f = MEASURE_FIELDS.find(x=>x.k===measureMetric) || MEASURE_FIELDS[0];
+  const pts = MEASURES.filter(m=>typeof m[f.k]==='number').map(m=>({ date: m.date, v: m[f.k] }));
+  const head = `<div class="viewtoggle" style="flex-wrap:wrap;padding-bottom:6px;">${chips}</div>`;
+  if(!pts.length) return head + `<p class="hint">Для «${f.label}» пока нет значений</p>`;
+  const sel = chartSel!=null && chartSel<pts.length ? chartSel : pts.length-1;
+  const sp = pts[sel], prev = pts[sel-1];
+  const dPrev = prev ? Math.round((sp.v-prev.v)*100)/100 : null;
+  const first = pts[0], last = pts[pts.length-1], dAll = Math.round((last.v-first.v)*100)/100;
+  const signed = d => d===0 ? '0' : (d>0 ? '+' : '−') + fmtVal(Math.abs(d));
+  const cap = `${dateShort(sp.date)}: <b>${fmtVal(sp.v)} ${f.unit}</b>${dPrev!==null ? ` <span class="muted">(${signed(dPrev)} к предыдущему)</span>` : ''}`;
+  const stats = pts.length>1 ? `<div class="ch-stats"><div>Было<b>${fmtVal(first.v)} ${f.unit}</b></div><div>Стало<b>${fmtVal(last.v)} ${f.unit}</b></div><div>За всё время<b>${signed(dAll)} ${f.unit}</b></div></div>` : '<p class="hint" style="text-align:center">Для линии нужно хотя бы два замера</p>';
+  return head + `<div class="ch-wrap">${chartSVG(pts, f.unit)}<div class="ch-cap">${cap}</div>${stats}</div>`;
+}
+function measureBodyHTML(readonly){ return measureView==='charts' ? measuresChartsHTML() : measuresTableHTML(readonly); }
+function measureToggleHTML(){
+  return `<button class="chip${measureView==='table'?' on':''}" onclick="setMeasureView('table')">Таблица</button><button class="chip${measureView==='charts'?' on':''}" onclick="setMeasureView('charts')">Графики</button>`;
+}
+function setMeasureView(v){ if(v!=='table' && v!=='charts') return; measureView = v; try{ localStorage.setItem(MEASURE_VIEW_KEY, v); }catch(e){} renderMeasures(); renderCoachMeasuresIfOpen(); }
+function setMeasureMetric(k){ measureMetric = k; chartSel = null; renderMeasures(); renderCoachMeasuresIfOpen(); }
+function pickChartPoint(i){ chartSel = i; renderMeasures(); renderCoachMeasuresIfOpen(); }
+
+// --- клиент: экран «Замеры» ---
+function renderMeasures(){
+  const body = document.getElementById('measure-body'); if(!body) return;
+  document.getElementById('measure-banner').innerHTML = measureBannerHTML(measureInfo(), false);
+  document.getElementById('measure-viewtoggle').innerHTML = measureToggleHTML();
+  body.innerHTML = measureBodyHTML(false);
+  renderMeasureActions();
+  renderPushCard();
+  renderDayMeasureBanner();
+  renderCoachMeasureRow();
+  updateGoalsBadge();
+}
+function renderMeasureActions(){ // напоминание в календарь телефона (настоящее уведомление накануне вечером)
+  const el = document.getElementById('measure-actions'); if(!el) return;
+  const info = measureInfo();
+  if(!SELF_HOSTED || !info.on){ el.innerHTML = ''; return; }
+  if(info.waiting){ el.innerHTML = '<div style="padding:8px 16px 0;"><p class="hint" style="padding:0;">Напоминание в календарь телефона станет доступно после первых замеров.</p></div>'; return; }
+  let sig = null; try{ sig = localStorage.getItem('kbju_ics_sig_v1'); }catch(e){}
+  const changed = sig && sig !== icsSignature();
+  el.innerHTML = `<div style="padding:10px 16px 0;"><button class="modal-btn" style="width:100%;padding:11px;" onclick="downloadMeasureIcs()">🔔 Напоминание в календарь телефона</button>
+    <p class="hint" style="padding:6px 0 0;${changed ? 'color:var(--under);font-weight:600;' : ''}">${changed ? 'Тренер изменил график замеров: скачайте напоминание заново, прежнее событие обновится.' : 'Календарь пришлёт уведомление накануне в 20:00 и утром в день замеров.'}</p></div>`;
+}
+
+// --- ввод и правка замеров ---
+function buildMeasureForm(){
+  const host = document.getElementById('mf-fields'); if(!host || host.dataset.built) return;
+  host.dataset.built = '1';
+  host.innerHTML = `<label class="np-label" style="margin-top:0;">Дата</label><input type="date" id="mf-date" class="np-input">`
+    + MEASURE_FIELDS.map(f=>`<label class="np-label">${f.label}, ${f.unit}</label><input type="text" inputmode="decimal" autocomplete="off" id="mf-${f.k}" class="np-input" placeholder="${f.unit==='кг' ? 'например, 82,4' : 'например, 94'}">`).join('')
+    + `<p id="mf-error" class="hint" style="color:var(--over);padding:8px 0 0;min-height:16px;"></p>`;
+}
+function openMeasureForm(dateISO){
+  buildMeasureForm();
+  const m = dateISO ? MEASURES.find(x=>x.date===dateISO) : null;
+  editingMeasure = m ? m.date : null;
+  document.getElementById('mf-title').textContent = m ? 'Изменить замеры' : 'Новые замеры';
+  const dt = document.getElementById('mf-date'); dt.value = m ? m.date : todayISO(); dt.max = todayISO();
+  MEASURE_FIELDS.forEach(f=>{ document.getElementById('mf-'+f.k).value = m && typeof m[f.k]==='number' ? String(m[f.k]).replace('.', ',') : ''; });
+  document.getElementById('mf-error').textContent = '';
+  document.getElementById('mf-del-wrap').style.display = m ? 'block' : 'none';
+  go('screen-measure-form');
+}
+function saveMeasure(){
+  const err = document.getElementById('mf-error'); err.textContent = '';
+  const date = document.getElementById('mf-date').value;
+  if(!ISO_RE.test(date) || date < '2000-01-01') { err.textContent = 'Укажите дату'; return; }
+  if(date > todayISO()){ err.textContent = 'Дата не может быть в будущем'; return; }
+  const rec = { date }; let any = false;
+  for(const f of MEASURE_FIELDS){
+    const raw = document.getElementById('mf-'+f.k).value.trim().replace(',', '.');
+    if(raw==='') continue;
+    const v = Number(raw);
+    if(!isFinite(v) || !/^\d+(\.\d{1,2})?$/.test(raw)){ err.textContent = `«${f.label}»: введите число, например ${f.unit==='кг' ? '82,4' : '94'}`; return; }
+    if(v < f.min || v > f.max){ err.textContent = `«${f.label}»: значение должно быть от ${f.min} до ${f.max} ${f.unit}`; return; }
+    rec[f.k] = v; any = true;
+  }
+  if(!any){ err.textContent = 'Заполните хотя бы одно значение'; return; }
+  const clash = MEASURES.find(m=>m.date===date && m.date!==editingMeasure);
+  const commit = ()=>{
+    const keep = MEASURES.filter(m=>m.date!==editingMeasure && m.date!==date);
+    keep.push(rec); keep.sort((a,b)=> a.date<b.date ? -1 : 1);
+    MEASURES.length = 0; keep.forEach(m=>MEASURES.push(m));
+    adoptAnchor();
+    editingMeasure = null; chartSel = null;
+    persist(); renderMeasures(); go('screen-measures');
+  };
+  if(clash) showConfirm('За эту дату замеры уже есть. Заменить их новыми?', commit); else commit();
+}
+function deleteMeasure(){
+  if(editingMeasure==null) return;
+  const d = editingMeasure;
+  showConfirm('Удалить замеры за ' + dateText(d) + '?', ()=>{
+    const keep = MEASURES.filter(m=>m.date!==d); MEASURES.length = 0; keep.forEach(m=>MEASURES.push(m));
+    editingMeasure = null; chartSel = null;
+    persist(); renderMeasures(); go('screen-measures');
+  }, 'Удалить');
+}
+
+// --- тренер: частота замеров и просмотр ---
+function scheduleSummaryText(){
+  const { every, anchor } = MEASURE_SCHEDULE;
+  if(!every) return 'не настроены';
+  return EVERY_TEXT[every] + (anchor ? ' · с ' + dateText(anchor) : ' · ждём первых замеров');
+}
+function setMeasureEvery(v){
+  if(![0,7,14].includes(v)) return;
+  const S = MEASURE_SCHEDULE;
+  if(v===0){ S.every = 0; S.anchor = null; S.since = null; }
+  else { if(!S.every){ S.anchor = null; S.since = todayISO(); } S.every = v; adoptAnchor(); }
+  persist(); renderCoachMeasures(); renderMeasures(); renderCoachMeasureRow();
+}
+function renderCoachMeasureRow(){ const e = document.getElementById('c-measure-sub'); if(e) e.textContent = scheduleSummaryText(); }
+function renderCoachMeasures(){
+  const sched = document.getElementById('c-measure-sched'); if(!sched) return;
+  document.getElementById('c-measure-title').textContent = 'Замеры — ' + selectedTrainee;
+  const { every } = MEASURE_SCHEDULE, info = measureInfo();
+  const freq = [[0,'Не требуются'],[7,'Раз в неделю'],[14,'Раз в две недели']].map(([v,l])=>`<button class="chip${every===v?' on':''}" onclick="setMeasureEvery(${v})">${l}</button>`).join('');
+  sched.innerHTML = `<p class="section-label" style="margin:0;">Как часто делать замеры</p><div class="row">${freq}</div>`
+    + (every ? `<p class="hint" style="padding:0 0 4px;">Первые замеры клиент делает, когда ему удобно. Дальше напоминания идут по графику: каждые ${every} дн. от даты первых замеров. Клиент получает напоминание накануне вечером.</p>` : '');
+  document.getElementById('c-measure-banner').innerHTML = every ? measureBannerHTML(info, true) : '';
+  document.getElementById('c-measure-viewtoggle').innerHTML = measureToggleHTML();
+  document.getElementById('c-measure-body').innerHTML = measureBodyHTML(true);
+  renderCoachPush();
+}
+function renderCoachMeasuresIfOpen(){ const s = document.getElementById('c-screen-measures'); if(s && s.classList.contains('active')) renderCoachMeasures(); }
+function openCoachMeasures(){ chartSel = null; renderCoachMeasures(); cGo('c-screen-measures'); }
+
+// --- напоминание в календарь телефона (.ics): уведомление накануне в 20:00 и утром ---
+function icsSignature(){ return [MEASURE_SCHEDULE.every, MEASURE_SCHEDULE.anchor].join('|'); }
+function icsFold(line){ const out = []; while(line.length > 60){ out.push(line.slice(0, 60)); line = ' ' + line.slice(60); } out.push(line); return out.join('\r\n'); }
+const icsEsc = t => String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+function buildMeasureIcs(now){
+  now = now || new Date();
+  const today = isoDate(now);
+  const first = lastDueOnOrBefore(today)===today ? today : nextDueAfter(today);
+  if(!MEASURE_SCHEDULE.every || !first) return null;
+  const ymd = first.replace(/-/g, ''), stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  let seq = 0; try{ seq = parseInt(localStorage.getItem('kbju_ics_seq_v1')||'0', 10) + 1; }catch(e){}
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//KBJU//Measures//RU', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    'UID:kbju-measure-' + (MY_CLIENT_ID || 'local') + '@kbju',
+    'DTSTAMP:' + stamp, 'SEQUENCE:' + seq,
+    'DTSTART:' + ymd + 'T080000', 'DTEND:' + ymd + 'T083000',
+    'RRULE:FREQ=WEEKLY;INTERVAL=' + (MEASURE_SCHEDULE.every/7),
+    'SUMMARY:' + icsEsc('Утренние замеры (КБЖУ)'),
+    'DESCRIPTION:' + icsEsc('Вес, шея, грудь, талия 1 и 2, бёдра. Утром, натощак. Внесите значения в приложении.'),
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc('Завтра утром нужно сделать замеры'), 'TRIGGER:-PT12H', 'END:VALARM',
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc('Пора делать замеры'), 'TRIGGER:PT0S', 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR'
+  ];
+  return { text: lines.map(icsFold).join('\r\n') + '\r\n', seq };
+}
+function downloadMeasureIcs(){
+  const ics = buildMeasureIcs();
+  if(!ics){ showToast('Сначала тренер должен настроить частоту замеров'); return; }
+  const blob = new Blob([ics.text], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'kbju-zamery.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>{ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 4000);
+  try{ localStorage.setItem('kbju_ics_seq_v1', String(ics.seq)); localStorage.setItem('kbju_ics_sig_v1', icsSignature()); }catch(e){}
+  renderMeasureActions();
+  showToast('Файл скачан. Откройте его и добавьте событие в календарь: напоминание придёт накануне в 20:00 и утром в день замеров');
+}
+// ---------- push-уведомления о замерах (только на своём сервере) ----------
+let pushUi = { state: 'off', msg: '' };   // off — скрыто, ios, unsupported, denied, ask, on
+let pushSyncedOnce = false;
+const pushKey = () => (window.BACKEND && window.BACKEND.vapidPublicKey) || '';
+const pushAvailable = () => SELF_HOSTED && !!pushKey() && !!(window.BACKEND && window.BACKEND.callFunction);
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+const isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true;
+function b64uToBytes(b){
+  const s = (b + '='.repeat((4 - b.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(s), out = new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+async function refreshPushUi(){
+  if(!pushAvailable() || MY_ROLE==='coach'){ pushUi.state = 'off'; return; }
+  if(isIOS() && !isStandalone()){ pushUi.state = 'ios'; return; }
+  if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)){ pushUi.state = 'unsupported'; return; }
+  if(Notification.permission==='denied'){ pushUi.state = 'denied'; return; }
+  let sub = null;
+  try{ const reg = await navigator.serviceWorker.getRegistration(); sub = reg ? await reg.pushManager.getSubscription() : null; }catch(e){}
+  pushUi.state = (Notification.permission==='granted' && sub) ? 'on' : 'ask';
+  if(pushUi.state==='on' && !pushSyncedOnce && DB && MY_CLIENT_ID){ // подписка могла смениться или не дойти до сервера — освежаем
+    pushSyncedOnce = true; try{ await savePushSubscription(sub); }catch(e){ pushSyncedOnce = false; }
+  }
+}
+async function savePushSubscription(sub){
+  const j = sub.toJSON();
+  const entry = { endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth,
+    tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ''), ua: String(navigator.userAgent).slice(0, 120), at: Date.now() };
+  const ref = DB.doc('push/' + MY_CLIENT_ID), snap = await ref.get();
+  const cur = snap.exists ? clone(snap.data()) : {};
+  const subs = (cur.subs || []).filter(x=>x.endpoint !== entry.endpoint); subs.push(entry);
+  await ref.set({ ...cur, subs: subs.slice(-5) });
+}
+async function removePushSubscription(endpoint){
+  const ref = DB.doc('push/' + MY_CLIENT_ID), snap = await ref.get();
+  if(!snap.exists) return;
+  const cur = clone(snap.data());
+  await ref.set({ ...cur, subs: (cur.subs || []).filter(x=>x.endpoint !== endpoint) });
+}
+function pushSay(t){ pushUi.msg = t; const p = document.getElementById('push-msg'); if(p) p.textContent = t; }
+function pushResultText(r){
+  if(r && r.sent > 0) return 'Отправлено. Уведомление должно прийти за несколько секунд.' + (r.removed ? ' Устаревших устройств удалено: ' + r.removed + '.' : '');
+  if(r && r.subs === 0) return 'На сервере нет вашей подписки. Нажмите «Отключить», затем снова «Включить уведомления».';
+  return 'Сервер не смог доставить уведомление' + (r && r.failed ? ' (ошибок: ' + r.failed + ')' : '') + '. Подробности: ' + ((r && r.errors && r.errors[0]) || 'нет данных');
+}
+async function enablePush(){
+  try{
+    const perm = await Notification.requestPermission();
+    if(perm!=='granted'){ pushSay(perm==='denied' ? 'Уведомления запрещены. Разрешите их для этого сайта в настройках браузера и обновите страницу.' : 'Разрешение не получено.'); await refreshPushUi(); renderPushCard(); return; }
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(pushKey()) });
+    await savePushSubscription(sub);
+    pushUi.msg = 'Уведомления включены. Нажмите «Тестовое уведомление с сервера», чтобы проверить.';
+  }catch(e){ pushUi.msg = 'Не удалось включить: ' + (e && (e.message || e.name) || 'ошибка'); }
+  await refreshPushUi(); renderPushCard();
+}
+async function disablePush(){
+  try{
+    const reg = await navigator.serviceWorker.getRegistration(), sub = reg ? await reg.pushManager.getSubscription() : null;
+    if(sub){ const ep = sub.endpoint; await sub.unsubscribe(); await removePushSubscription(ep); }
+    pushUi.msg = 'Уведомления отключены на этом устройстве.';
+  }catch(e){ pushUi.msg = 'Не удалось отключить: ' + (e && e.message || 'ошибка'); }
+  pushSyncedOnce = false; await refreshPushUi(); renderPushCard();
+}
+async function testPushServer(){
+  pushSay('Отправляю…');
+  try{ pushSay(pushResultText(await window.BACKEND.callFunction('send-reminders', { test: MY_CLIENT_ID }))); }
+  catch(e){ pushSay('Сервер уведомлений не отвечает: ' + (e && e.message || 'ошибка') + '. Проверьте, что функция send-reminders развёрнута (инструкция, раздел «Push-уведомления»).'); }
+}
+async function testPushLocal(){
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification('КБЖУ: проверка', { body: 'Так будет выглядеть напоминание о замерах.', tag: 'kbju-test', icon: 'icons/icon-192.png' });
+    pushSay('Показано на устройстве. Если вы его видите, показ работает; если сервер не присылает, ищите проблему в сервере.');
+  }catch(e){ pushSay('Не удалось показать: ' + (e && e.message || 'ошибка')); }
+}
+function renderPushCard(){
+  const el = document.getElementById('push-card'); if(!el) return;
+  refreshPushUi().then(()=>{
+    const st = pushUi.state;
+    if(st==='off' || !measureInfo().on){ el.innerHTML = ''; return; }
+    const btn = (label, fn, primary) => `<button class="modal-btn${primary?' primary':''}" style="width:100%;padding:11px;margin-top:6px;" onclick="${fn}">${label}</button>`;
+    const body = {
+      ios: 'На iPhone уведомления работают только у приложения, добавленного на главный экран: Safari → «Поделиться» → «На экран Домой», затем откройте его оттуда.',
+      unsupported: 'Этот браузер не поддерживает уведомления. Воспользуйтесь напоминанием в календаре телефона.',
+      denied: 'Уведомления запрещены для этого сайта. Разрешите их в настройках браузера и обновите страницу.',
+      ask: 'Включите уведомления, чтобы накануне замеров в 20:00 приходило напоминание, даже когда приложение закрыто.' + btn('🔔 Включить уведомления', 'enablePush()', true),
+      on: '🔔 Уведомления включены на этом устройстве: напоминание придёт накануне замеров в 20:00.' + btn('Тестовое уведомление с сервера', 'testPushServer()') + btn('Проверить показ на устройстве', 'testPushLocal()') + btn('Отключить', 'disablePush()'),
+    }[st] || '';
+    el.innerHTML = `<div style="padding:10px 16px 0;"><div class="m-banner" style="margin:0;font-size:12.5px;">${body}<p id="push-msg" class="hint" style="padding:6px 0 0;margin:0;">${escHtml(pushUi.msg || '')}</p></div></div>`;
+  });
+}
+// тренер: есть ли у клиента подписка, и тестовая отправка
+async function renderCoachPush(){
+  const el = document.getElementById('c-push-status'); if(!el) return;
+  if(!pushAvailable() || !DB || !selectedClientId){ el.innerHTML = ''; return; }
+  let n = 0;
+  try{ const s = await DB.doc('push/' + selectedClientId).get(); n = s.exists ? ((s.data().subs) || []).length : 0; }catch(e){}
+  el.innerHTML = `<div class="m-banner" style="font-size:12.5px;">🔔 Уведомления клиента: <b>${n ? 'включены (устройств: ' + n + ')' : 'не включены'}</b>
+    <button class="modal-btn" style="width:100%;padding:10px;margin-top:8px;" onclick="coachTestPush()">Отправить клиенту тестовое уведомление</button>
+    <p id="c-push-msg" class="hint" style="padding:6px 0 0;margin:0;"></p></div>`;
+}
+async function coachTestPush(){
+  const say = t => { const p = document.getElementById('c-push-msg'); if(p) p.textContent = t; };
+  say('Отправляю…');
+  try{ say(pushResultText(await window.BACKEND.callFunction('send-reminders', { test: selectedClientId }))); }
+  catch(e){ say('Сервер уведомлений не отвечает: ' + (e && e.message || 'ошибка')); }
+}
+// переход по нажатию на уведомление
+function handleDeepLink(){
+  if(location.hash==='#measures' && MY_ROLE!=='coach'){
+    go('screen-measures');
+    try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  }
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', e=>{ if(e.data && e.data.type==='goto' && e.data.hash==='#measures' && MY_ROLE!=='coach') go('screen-measures'); });
+}
+// пересчёт напоминаний, когда приложение просто лежит открытым (наступил вечер, сменился день)
+setInterval(()=>{ try{ renderDayMeasureBanner(); updateGoalsBadge(); if(document.getElementById('screen-measures').classList.contains('active')) renderMeasures(); }catch(e){} }, 60000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ renderDayMeasureBanner(); updateGoalsBadge(); }catch(e){} } });
 
 // ---------- рендер дня ----------
 function sumDay(day){
@@ -838,7 +1324,8 @@ function viewToggleHTML(){
 }
 
 // ---------- заголовок дня: набрано / цель и баланс жиров (с целевым) ----------
-function summaryHTML(t){
+function summaryHTML(t, iso){
+  const N = normsFor(iso || todayISO()), GOAL = N.goal, TOLERANCE = N.tol; // цели того дня, который показан
   const fatVeg = Math.max(0, t.fat - t.fatAnimal);
   const balCls = balClass(fatBalanceDir(t.fatAnimal, fatVeg));
   const cls = devClass;
@@ -852,10 +1339,10 @@ function summaryHTML(t){
     <div><p class="stat-label">Углев.</p><p class="stat-val"><span class="${cls(dC)}">${Math.round(t.carbs)}</span><small>/${GOAL.carbs}</small></p></div>
     <div style="grid-column: 1/-1; margin-top:4px;"><p class="stat-label">Баланс жиров (жив / раст)</p><p class="stat-val" style="font-size:13px;"><span class="${balCls}">${Math.round(t.fatAnimal)} / ${Math.round(fatVeg)} г</span> <small>· цель ${goalAnimal} / ${goalVeg} г</small></p></div>`;
 }
-function renderSummary(){ document.getElementById('day-summary').innerHTML = summaryHTML(sumDay(dayObj(currentDay))); }
+function renderSummary(){ document.getElementById('day-summary').innerHTML = summaryHTML(sumDay(dayObj(currentDay)), currentDay); }
 
 // ---------- тело дня: по приёмам или по категориям; одно и то же для клиента (правка) и тренера (просмотр) ----------
-const DAY_COLGROUP = '<colgroup><col class="c-name"><col class="c-qty"><col class="c-mac"><col class="c-mac"><col class="c-mac"><col class="c-del"></colgroup>';
+const DAY_COLGROUP = '<colgroup><col class="c-name"><col class="c-qty"><col class="c-kcal"><col class="c-mac"><col class="c-mac"><col class="c-mac"><col class="c-del"></colgroup>';
 function itemRowHTML(i, mealName, idx, readonly, tag){
   const val = i.w!=null ? i.w : i.qty;
   const unit = i.w!=null ? 'г' : 'шт';
@@ -865,7 +1352,8 @@ function itemRowHTML(i, mealName, idx, readonly, tag){
   const del = readonly ? '' : `<button class="del-btn" onclick="deleteItem('${mealName}', ${idx})" title="Удалить из дневника" aria-label="Удалить">×</button>`;
   return `<tr data-meal="${mealName}" data-idx="${idx}">
       <td>${escHtml(i.p)}${tag ? `<span class="meal-tag">${escHtml(tag)}</span>` : ''}</td>
-      <td class="muted qty-cell">${qty}<span class="qty-unit">${unit}</span></td>
+      <td class="qty-cell">${qty}<span class="qty-unit">${unit}</span></td>
+      <td class="kcal-cell" data-f="kcal">${Math.round(i.kcal)}</td>
       <td class="col-p" data-f="protein">${Math.round(i.protein)}</td>
       <td class="col-f" data-f="fat">${Math.round(i.fat)}</td>
       <td class="col-c" data-f="carbs">${Math.round(i.carbs)}</td>
@@ -879,10 +1367,10 @@ function mealsBodyHTML(day, readonly){
       ? `${m.icon} ${m.name} · <span class="meal-kcal">${Math.round(mk)} ккал</span>`
       : `${m.icon} ${m.name} — не заполнено`;
     const headRow = m.items.length
-      ? `<tr><th colspan="2" class="meal-title-cell">${titleTxt}</th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th><th class="del-cell"></th></tr>`
-      : `<tr><th colspan="6" class="meal-title-cell">${titleTxt}</th></tr>`;
+      ? `<tr><th colspan="2" class="meal-title-cell">${titleTxt}</th><th class="col-k">Ккал</th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th><th class="del-cell"></th></tr>`
+      : `<tr><th colspan="7" class="meal-title-cell">${titleTxt}</th></tr>`;
     const itemRows = m.items.map((i,idx)=>itemRowHTML(i, m.name, idx, readonly, null)).join('');
-    const addRow = readonly ? '' : `<tr class="add-row"><td colspan="6"><button class="add-row-btn" onclick="openAdd('${m.name}')">+ Добавить продукт</button></td></tr>`;
+    const addRow = readonly ? '' : `<tr class="add-row"><td colspan="7"><button class="add-row-btn" onclick="openAdd('${m.name}')">+ Добавить продукт</button></td></tr>`;
     return `<div class="meal"><table class="ktable day-table" data-meal="${m.name}">${DAY_COLGROUP}
       <thead>${headRow}</thead>
       <tbody>${itemRows}${addRow}</tbody>
@@ -895,7 +1383,7 @@ function catsBodyHTML(day, readonly){
   const tables = CAT_ORDER.filter(c=>groups[c].length).map(c=>{
     const kc = groups[c].reduce((s,x)=>s+x.i.kcal,0);
     return `<div class="meal"><table class="ktable day-table" data-cat="${c}">${DAY_COLGROUP}
-      <thead><tr><th colspan="2" class="meal-title-cell">${CAT_LABEL[c]} · <span class="meal-kcal">${Math.round(kc)} ккал</span></th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th><th class="del-cell"></th></tr></thead>
+      <thead><tr><th colspan="2" class="meal-title-cell">${CAT_LABEL[c]} · <span class="meal-kcal">${Math.round(kc)} ккал</span></th><th class="col-k">Ккал</th><th class="col-p">Б</th><th class="col-f">Ж</th><th class="col-c">У</th><th class="del-cell"></th></tr></thead>
       <tbody>${groups[c].map(x=>itemRowHTML(x.i, x.m.name, x.idx, readonly, x.m.name)).join('')}</tbody>
     </table></div>`;
   }).join('');
@@ -919,6 +1407,7 @@ function renderDay(){
   document.getElementById('day-title').textContent = dayLabel(currentDay);
   renderSummary();
   updateStickyOffsets();
+  renderDayMeasureBanner();
   document.getElementById('day-viewtoggle').innerHTML = viewToggleHTML();
   document.getElementById('day-meals').innerHTML = dayBodyHTML(day, false);
 }
@@ -930,7 +1419,7 @@ function renderCoachDay(){
   const day = coachDayObj();
   document.getElementById('c-day-title').textContent = dayLabel(coachDay);
   document.getElementById('c-day-who').textContent = 'Дневник клиента ' + selectedTrainee + ' · только просмотр';
-  document.getElementById('c-day-summary').innerHTML = summaryHTML(sumDay(day));
+  document.getElementById('c-day-summary').innerHTML = summaryHTML(sumDay(day), coachDay);
   document.getElementById('c-day-viewtoggle').innerHTML = viewToggleHTML();
   document.getElementById('c-day-meals').innerHTML = dayBodyHTML(day, true);
   updateStickyOffsets();
@@ -1026,7 +1515,7 @@ function openInlineStepper(tr){ // под строкой продукта — к
   const unit = inlineUnitOf(tr);
   const row = document.createElement('tr');
   row.className = 'step-row';
-  row.innerHTML = `<td colspan="6"><div class="inline-stepper">
+  row.innerHTML = `<td colspan="7"><div class="inline-stepper">
       <button class="stepbtn sm" data-dir="-1" aria-label="Меньше">−</button>
       <div class="stepchips">${stepChipsHTML(unit, 'pickInlineStep')}</div>
       <button class="stepbtn sm accentbtn" data-dir="1" aria-label="Больше">+</button></div></td>`;
@@ -1077,6 +1566,7 @@ function onInlineQtyInput(inputEl){
     item.kcal *= factor; item.protein *= factor; item.fat *= factor; item.fatAnimal = (item.fatAnimal||0)*factor; item.carbs *= factor;
   }
   if(item.w!=null) item.w = n; else item.qty = n;
+  tr.querySelector('[data-f="kcal"]').textContent = Math.round(item.kcal);
   tr.querySelector('[data-f="protein"]').textContent = Math.round(item.protein);
   tr.querySelector('[data-f="fat"]').textContent = Math.round(item.fat);
   tr.querySelector('[data-f="carbs"]').textContent = Math.round(item.carbs);
@@ -1092,8 +1582,14 @@ function cellHtml(val, goal, tol, unit){
   return `<td class="wk-cell ${devClass(dir)}">${val}${unit||''}</td>`;
 }
 function weekTableHTML(){
-  const rows = weekRows().map(w=>{
-    const dirs = [deviation(w.kcal,GOAL.kcal,TOLERANCE.kcal), deviation(w.protein,GOAL.protein,TOLERANCE.protein), deviation(w.fat,GOAL.fat,TOLERANCE.fat), deviation(w.carbs,GOAL.carbs,TOLERANCE.carbs)];
+  const rowsData = weekRows();
+  const todayI = todayISO(), firstI = rowsData[0].iso, lastI = rowsData[6].iso;
+  const refIso = todayI < firstI ? firstI : (todayI < lastI ? todayI : lastI);
+  const GOAL = normsFor(refIso).goal;   // в строке «цель» — цели на этот день
+  const changedInWeek = new Set(rowsData.map(w=>{ const n = normsFor(w.iso); return goalsSigOf(n.goal, n.tol); })).size > 1;
+  const rows = rowsData.map(w=>{
+    const N = normsFor(w.iso), G = N.goal, TL = N.tol;   // каждый день оценивается по целям, действовавшим в этот день
+    const dirs = [deviation(w.kcal,G.kcal,TL.kcal), deviation(w.protein,G.protein,TL.protein), deviation(w.fat,G.fat,TL.fat), deviation(w.carbs,G.carbs,TL.carbs)];
     const balDir = fatBalanceDir(w.fatAnimal, w.fatVeg);
     const anyBad = w.kcal!=null && (dirs.some(d=>d) || balDir);
     const ic = w.kcal==null ? '<span class="ic pending">•</span>' : anyBad ? '<span class="ic bad">⚠️</span>' : '<span class="ic ok">✓</span>';
@@ -1104,7 +1600,7 @@ function weekTableHTML(){
     return `<tr class="wk-row" onclick="openWeekDay('${w.iso}')" style="cursor:pointer;">
       <td class="wk-ic">${ic}</td>
       <td class="wk-day"${w.isToday?' style="color:var(--text);font-weight:700;"':''}>${w.d}</td>
-      ${cellHtml(w.kcal, GOAL.kcal, TOLERANCE.kcal)}
+      ${cellHtml(w.kcal, G.kcal, TL.kcal)}
       <td class="wk-cell col-p ${w.protein==null?'muted':devClass(dirs[1])}">${w.protein??'—'}</td>
       ${fatCell}
       <td class="wk-cell col-c ${w.carbs==null?'muted':devClass(dirs[3])}">${w.carbs??'—'}</td>
@@ -1125,7 +1621,7 @@ function weekTableHTML(){
       <tbody>${rows}</tbody>
     </table>
     </div>
-    <p class="hint">Красным — выше цели / перекос в животные жиры; жёлтым — ниже цели / перекос в растительные жиры. Дни без записей — «—». Нажмите на день, чтобы открыть дневник</p>`;
+    <p class="hint">Красным — выше цели / перекос в животные жиры; жёлтым — ниже цели / перекос в растительные жиры. Дни без записей — «—». Нажмите на день, чтобы открыть дневник</p>${changedInWeek ? `<p class="hint">В эту неделю цели менялись: каждый день оценивается по целям, действовавшим в этот день. В строке «цель» — цели на ${dateText(refIso)}</p>` : ''}`;
 }
 function renderWeek(){
   document.getElementById('week-list').innerHTML = weekTableHTML();
@@ -1142,6 +1638,7 @@ function renderCatalog(){
   renderCatFilter('cat-filter-catalog', catalogFilter, 'setCatalogFilter');
   document.getElementById('catalog-list').innerHTML = catalogHTML(catalogFilter);
 }
+const byName = (a, b) => String(a.name).localeCompare(String(b.name), 'ru', { sensitivity: 'base', numeric: true }); // списки продуктов — по алфавиту
 const fmtNum = v => String(Math.round((+v || 0) * 100) / 100); // в таблице — не больше 2 знаков после запятой, чтобы число не вылезало из колонки
 function catalogHTML(filter, editable, sourceArray){
   const src = sourceArray || PRODUCTS;
@@ -1149,7 +1646,7 @@ function catalogHTML(filter, editable, sourceArray){
   const groups = {protein:'Белки', fat:'Жиры', carb:'Углеводы'};
   let html = '';
   Object.keys(groups).forEach(g=>{
-    const items = list.filter(p=>p.cat.includes(g));
+    const items = list.filter(p=>p.cat.includes(g)).sort(byName);
     if(!items.length) return;
     html += `<div class="list-pad cat-section">
       <table class="ktable cat-table">
@@ -1211,7 +1708,7 @@ function onNpNameInput(){
   const pool = editTarget==='template' ? PRODUCT_TEMPLATE : PRODUCTS.filter(p=>!p.rejected);
   const qn = q.trim().toLowerCase().replace(/ё/g,'е');
   const existing = qn.length>=2
-    ? pool.filter(p=>p.id!==editingProductId && p.name.toLowerCase().replace(/ё/g,'е').includes(qn)).slice(0,4).map(p=>({...p, exists:true}))
+    ? pool.filter(p=>p.id!==editingProductId && p.name.toLowerCase().replace(/ё/g,'е').includes(qn)).sort(byName).slice(0,4).map(p=>({...p, exists:true}))
     : [];
   const keys = new Set(pool.map(p=>dupKey(p.name)));
   const fresh = searchFoodDB(q).filter(f=>!keys.has(dupKey(f.name))).slice(0,4);
@@ -1402,10 +1899,11 @@ function setAddFilter(k){ addFilter = k; renderAdd(); }
 function renderAdd(){
   renderCatFilter('cat-filter-add', addFilter, 'setAddFilter');
   const t = sumDay(dayObj(currentDay));
+  const N = normsFor(currentDay);
   const nutrientMap = {
-    protein: { label: 'Белки', val: t.protein, goal: GOAL.protein, tol: TOLERANCE.protein },
-    fat:     { label: 'Жиры',  val: t.fat,     goal: GOAL.fat,     tol: TOLERANCE.fat },
-    carb:    { label: 'Углеводы', val: t.carbs, goal: GOAL.carbs, tol: TOLERANCE.carbs },
+    protein: { label: 'Белки', val: t.protein, goal: N.goal.protein, tol: N.tol.protein },
+    fat:     { label: 'Жиры',  val: t.fat,     goal: N.goal.fat,     tol: N.tol.fat },
+    carb:    { label: 'Углеводы', val: t.carbs, goal: N.goal.carbs, tol: N.tol.carbs },
   };
   if(addFilter==='all'){
     document.getElementById('add-hint').textContent = 'Показаны все продукты, независимо от категории';
@@ -1416,7 +1914,7 @@ function renderAdd(){
     document.getElementById('add-hint').innerHTML = `${nutrient.label} за день: <span class="${cls}">${Math.round(nutrient.val)}</span> / ${nutrient.goal} г`;
   }
   document.getElementById('add-hint').className = 'hint';
-  const items = PRODUCTS.filter(p=> (addFilter==='all' || p.cat.includes(addFilter)) && !p.pending && !p.rejected);
+  const items = PRODUCTS.filter(p=> (addFilter==='all' || p.cat.includes(addFilter)) && !p.pending && !p.rejected).sort(byName);
   document.getElementById('add-list').innerHTML = `<div class="list-pad">` + items.map(p=>{
       const label = p.unit==='piece' ? `на 1 шт` : `на 100 г`;
     const val = addFilter==='protein' ? p.protein+' г Б' : addFilter==='fat' ? p.fat+' г Ж' : addFilter==='carb' ? p.carbs+' г У' : `Б${p.protein} Ж${p.fat} У${p.carbs}`;
@@ -1509,6 +2007,7 @@ function dayTotalsBase(){
   return t;
 }
 function updateQtyPreview(){
+  const N = normsFor(currentDay), GOAL = N.goal, TOLERANCE = N.tol;
   const v = calcQty();
   const base = dayTotalsBase();
   const proj = { kcal: base.kcal+v.kcal, protein: base.protein+v.protein, fat: base.fat+v.fat, carbs: base.carbs+v.carbs };
@@ -1602,6 +2101,28 @@ async function showSyncInfo(){
   showModalHtml(html, buttons);
 }
 
+// ---------- замеры ----------
+const MEASURES = [];                                              // [{date, weight, neck, chest, waist1, waist2, hips}], по возрастанию даты
+const MEASURE_SCHEDULE = { every: 0, anchor: null, since: null };  // every: 0 — не требуются, 7 / 14 дней; anchor — дата первых замеров (от неё считается график); since — когда тренер включил график
+const MEASURE_FIELDS = [
+  { k:'weight', label:'Вес',     unit:'кг', min:20, max:400 },
+  { k:'neck',   label:'Шея',     unit:'см', min:10, max:100 },
+  { k:'chest',  label:'Грудь',   unit:'см', min:30, max:250 },
+  { k:'waist1', label:'Талия 1', unit:'см', min:30, max:250 },
+  { k:'waist2', label:'Талия 2', unit:'см', min:30, max:250 },
+  { k:'hips',   label:'Бёдра',   unit:'см', min:30, max:250 },
+];
+function replaceMeasures(src){
+  MEASURES.length = 0;
+  if(Array.isArray(src)) src.forEach(m=>{ if(m && ISO_RE.test(m.date||'')) MEASURES.push(m); });
+  MEASURES.sort((a,b)=> a.date<b.date ? -1 : a.date>b.date ? 1 : 0);
+}
+function applySchedule(src){
+  const ok = src && typeof src==='object';
+  MEASURE_SCHEDULE.every = ok && [0,7,14].includes(src.every) ? src.every : 0;
+  MEASURE_SCHEDULE.anchor = ok && ISO_RE.test(src.anchor||'') ? src.anchor : null;
+  MEASURE_SCHEDULE.since = ok && ISO_RE.test(src.since||'') ? src.since : null;
+}
 let goalsUnseen = false; // тренер изменил цели, клиент ещё не открывал экран «Цели»
 let goalsSeen = null;      // цели и допуски, которые клиент видел в последний раз — от них считаем, что изменилось
 let goalsHighlight = null; // что подсветить на экране целей при первом открытии после изменения (только в памяти)
@@ -1616,29 +2137,40 @@ function computeGoalsDiff(){
   });
   return (Object.keys(goal).length || Object.keys(tol).length) ? { goal, tol } : null;
 }
+let adminGoalsSeen = null; // администратор, смотрящий за клиента, «просмотрел» цели у себя, не трогая уведомление самого клиента
+function goalsPending(){ // есть ли у клиента непросмотренное изменение целей
+  if(!goalsUnseen) return false;
+  const cur = goalsSigOf(GOAL, TOLERANCE);
+  if(adminView && adminView.role==='client') return !(adminGoalsSeen && adminGoalsSeen.cid===MY_CLIENT_ID && adminGoalsSeen.sig===cur);
+  if(goalsSeen && goalsSigOf(goalsSeen.GOAL, goalsSeen.TOLERANCE)===cur) return false; // эти самые цели клиент уже видел (устаревшая отметка не должна возвращать точку)
+  return true;
+}
 function markGoalsSeen(){ // клиент открыл цели: запоминаем, что подсветить, и гасим уведомление
   if(!goalsUnseen) return false;
   goalsHighlight = computeGoalsDiff();
-  if(adminView && adminView.role==='client') return true; // администратор смотрит за клиента: подсветку показываем, но уведомление клиента не гасим
+  if(adminView && adminView.role==='client'){ adminGoalsSeen = { cid: MY_CLIENT_ID, sig: goalsSigOf(GOAL, TOLERANCE) }; updateGoalsBadge(); return true; } // администратор смотрит за клиента: у себя точку гасим, а уведомление самого клиента не трогаем
   goalsUnseen = false;
   goalsSeen = { GOAL: {...GOAL}, TOLERANCE: {...TOLERANCE} };
   persist(); updateGoalsBadge();
   return true;
 }
-function updateGoalsBadge(){
+function updateGoalsBadge(){ // синяя точка на «Цели» и на «Замерах» + значок на иконке установленного приложения
   const dot = document.getElementById('goals-dot');
-  if(dot) dot.classList.toggle('show', !!goalsUnseen);
-  // значок на иконке установленного приложения — только на стороне клиента
+  if(dot) dot.classList.toggle('show', goalsPending());
+  const mAny = typeof measureInfo==='function' && MY_ROLE!=='coach' && measureInfo().any;
+  const mdot = document.getElementById('measure-dot');
+  if(mdot) mdot.classList.toggle('show', !!mAny);
   try{
     const traineeSide = MY_ROLE!=='coach' && document.getElementById('app').style.display!=='none';
+    const count = (goalsPending() ? 1 : 0) + (mAny ? 1 : 0);
     if(navigator.setAppBadge){
-      if(goalsUnseen && traineeSide) navigator.setAppBadge(1).catch(()=>{});
+      if(count && traineeSide) navigator.setAppBadge(count).catch(()=>{});
       else if(navigator.clearAppBadge) navigator.clearAppBadge().catch(()=>{});
     }
   }catch(e){}
 }
 function persist(){
-  const snapshot = { DAYS: daysForSave(), PRODUCTS, GOAL, TOLERANCE, GOAL_HISTORY, nextProductId, goalsUnseen, goalsSeen };
+  const snapshot = { DAYS: daysForSave(), PRODUCTS, GOAL, TOLERANCE, GOAL_HISTORY, nextProductId, goalsUnseen, goalsSeen, MEASURES, measureSchedule: MEASURE_SCHEDULE };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   } catch(e){ /* приватный режим или заполнено хранилище — не критично */ }
@@ -1670,9 +2202,11 @@ function applyRemoteState(s){
   if(s.TOLERANCE) Object.assign(TOLERANCE, s.TOLERANCE);
   if(Array.isArray(s.GOAL_HISTORY)){ GOAL_HISTORY.length = 0; s.GOAL_HISTORY.forEach(h=>GOAL_HISTORY.push(h)); }
   if(!GOAL_HISTORY.length) freshGoalHistory().forEach(h=>GOAL_HISTORY.push(h));
+  normalizeGoalHistory();
   if(typeof s.nextProductId==='number') nextProductId = s.nextProductId;
   goalsUnseen = !!s.goalsUnseen;
   goalsSeen = s.goalsSeen || null;
+  replaceMeasures(s.MEASURES); applySchedule(s.measureSchedule);
 }
 function rerenderAll(){
   renderDay(); renderWeek(); renderCatalog();
@@ -1680,6 +2214,7 @@ function rerenderAll(){
   const goalsOpen = document.getElementById('screen-goals').classList.contains('active');
   if(goalsOpen){ markGoalsSeen(); renderGoalsView(); } // уже смотрит экран целей — считаем просмотренным, но подсвечиваем новое
   updateGoalsBadge();
+  renderMeasures(); renderCoachMeasuresIfOpen();
   const coachCardOpen = document.getElementById('c-screen-card') && document.getElementById('c-screen-card').classList.contains('active');
   if(coachCardOpen) renderTraineeCardMini();
   const prodOpen = document.getElementById('c-screen-products') && document.getElementById('c-screen-products').classList.contains('active');
@@ -1688,7 +2223,8 @@ function rerenderAll(){
 function freshClientState(){ // стартовые данные нового клиента: общая база, пустой дневник, цели по умолчанию
   return { DAYS: {}, PRODUCTS: cloneTemplate(), GOAL: {...DEFAULT_GOAL}, TOLERANCE: {...DEFAULT_TOLERANCE}, GOAL_HISTORY: freshGoalHistory(),
     nextProductId: Math.max(0, ...PRODUCT_TEMPLATE.map(p=>p.id)) + 1, goalsUnseen: false,
-    goalsSeen: { GOAL: {...DEFAULT_GOAL}, TOLERANCE: {...DEFAULT_TOLERANCE} } };
+    goalsSeen: { GOAL: {...DEFAULT_GOAL}, TOLERANCE: {...DEFAULT_TOLERANCE} },
+    MEASURES: [], measureSchedule: { every: 0, anchor: null, since: null } };
 }
 function subscribeSlot(slot){
   if(!DB) return;
@@ -1853,10 +2389,12 @@ function enterApp(){
   if(MY_ROLE==='coach'){
     setMode('coach');
     subscribeClients();
+    updateBackupRow();
   } else {
     setMode('trainee');
     subscribeSlot(MY_CLIENT_ID);
     loadMyName();
+    handleDeepLink();
   }
 }
 async function loadMyName(){ // имя клиента для строки состояния (его ввёл сам клиент при входе)
@@ -1973,9 +2511,11 @@ function loadPersisted(){
     if(saved.TOLERANCE) Object.assign(TOLERANCE, saved.TOLERANCE);
     if(Array.isArray(saved.GOAL_HISTORY)){ GOAL_HISTORY.length = 0; saved.GOAL_HISTORY.forEach(h=>GOAL_HISTORY.push(h)); }
     if(!GOAL_HISTORY.length) freshGoalHistory().forEach(h=>GOAL_HISTORY.push(h));
+    normalizeGoalHistory();
     if(typeof saved.nextProductId==='number') nextProductId = saved.nextProductId;
     goalsUnseen = !!saved.goalsUnseen;
     goalsSeen = saved.goalsSeen || null;
+    replaceMeasures(saved.MEASURES); applySchedule(saved.measureSchedule);
   } catch(e){ /* повреждённые данные — просто продолжаем с демо-набором */ }
 }
 function resetDemoData(){
@@ -2076,7 +2616,121 @@ async function openTraineeCard(cid){
   subscribeSlot(cid);
   renderTraineeCardMini();
   updateCoachProductsBadge();
+  renderCoachMeasureRow();
   cGo('c-screen-card');
+}
+// ---------- резервная копия и перенос данных (только на своём сервере, только тренеру и администратору) ----------
+const BACKUP_COLLECTIONS = ['shared','clientsMeta','clients','invites','roles','push']; // push — подписки клиентов на уведомления
+const BACKUP_KEY = 'kbju_last_backup_v1';
+let pendingRestore = null;
+function backupAllowed(){ return SELF_HOSTED && IS_STAFF && !!DB && MY_ROLE==='coach'; }
+function lastBackupText(){
+  try{ const t = parseInt(localStorage.getItem(BACKUP_KEY)||'0', 10); if(t) return 'последняя копия: ' + dateText(isoDate(new Date(t))); }catch(e){}
+  return 'копий ещё не было';
+}
+function updateBackupRow(){
+  const r = document.getElementById('c-backup-row'); if(!r) return;
+  r.style.display = backupAllowed() ? '' : 'none';
+  const s = document.getElementById('c-backup-sub'); if(s) s.textContent = lastBackupText();
+}
+const errText = e => [e && e.code, e && e.message].filter((x,i,a)=>x && a.indexOf(x)===i).join(': ') || 'ошибка';
+function bkSay(t){ const s = document.getElementById('bk-status'); if(s) s.textContent = t; }
+async function collectBackup(){
+  const docs = [];
+  for(const col of BACKUP_COLLECTIONS){
+    const q = await DB.collection(col).get();
+    q.docs.forEach(d=>docs.push({ path: col+'/'+d.id, data: clone(d.data()) }));
+  }
+  return { app: 'kbju', format: 1, exportedAt: new Date().toISOString(), docs };
+}
+async function downloadBackup(){
+  try{
+    bkSay('Собираю данные…');
+    const b = await collectBackup();
+    const blob = new Blob([JSON.stringify(b)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kbju-backup-' + todayISO() + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>{ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 4000);
+    try{ localStorage.setItem(BACKUP_KEY, String(Date.now())); }catch(e){}
+    bkSay('Готово: сохранено документов — ' + b.docs.length + '. Файл лежит в загрузках.');
+    updateBackupRow();
+  }catch(e){ bkSay('Не удалось сделать копию: ' + errText(e)); }
+}
+function parseBackup(text){
+  let b; try{ b = JSON.parse(text); }catch(e){ throw new Error('это не файл копии КБЖУ: он не читается'); }
+  if(!b || b.app!=='kbju' || b.format!==1 || !Array.isArray(b.docs)) throw new Error('это не файл копии КБЖУ');
+  b.docs.forEach(d=>{
+    const parts = String((d && d.path) || '').split('/');
+    if(parts.length!==2 || !parts[1] || !BACKUP_COLLECTIONS.includes(parts[0]) || !d.data || typeof d.data!=='object') throw new Error('в файле повреждены данные: ' + ((d && d.path) || '?'));
+  });
+  return b;
+}
+function pickBackupFile(mode){ // mode: 'same' — в этот же проект, 'move' — в новый
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = ()=>{ const f = inp.files && inp.files[0]; if(f) f.text().then(t=>askRestore(t, mode, f.name)).catch(()=>bkSay('Не удалось прочитать файл')); };
+  inp.click();
+}
+function askRestore(text, mode, fname){
+  let b; try{ b = parseBackup(text); }catch(e){ bkSay(e.message); return; }
+  const n = col => b.docs.filter(d=>d.path.startsWith(col+'/')).length;
+  const when = b.exportedAt ? new Date(b.exportedAt).toLocaleString('ru-RU') : 'неизвестно';
+  const warn = mode==='move'
+    ? 'Перенос в НОВЫЙ проект: данные клиентов сохранятся, а войти клиенты смогут заново по новым кодам приглашения.'
+    : 'Восстановление в ЭТОТ проект: документы из файла заменят текущие с теми же именами. Всё, что записано после создания копии, будет потеряно.';
+  pendingRestore = { b, mode };
+  showModalHtml(`<p style="margin:0 0 6px;font-weight:600;">Восстановить данные?</p>
+    <p style="font-size:12.5px;color:var(--text2);margin:0 0 8px;text-align:left;">Файл: ${escHtml(fname)}<br>Создан: ${escHtml(when)}<br>Клиентов: ${n('clientsMeta')}, дневников: ${n('clients')}</p>
+    <p style="font-size:12.5px;margin:0;text-align:left;">${escHtml(warn)}</p>`,
+    `<button class="modal-btn" onclick="pendingRestore=null; openBackupDialog()">Отмена</button><button class="modal-btn primary" onclick="runRestore()">Восстановить</button>`);
+}
+async function runRestore(){
+  const job = pendingRestore; pendingRestore = null;
+  if(!job) return;
+  const { b, mode } = job;
+  showModalHtml('<p style="margin:0 0 8px;font-weight:600;">Восстанавливаю…</p><p id="rs-progress" style="font-size:13px;color:var(--text2);margin:0;">Начинаю</p>', '');
+  const prog = t => { const p = document.getElementById('rs-progress'); if(p) p.textContent = t; };
+  let docs = b.docs.slice();
+  if(mode==='move') docs = docs.filter(d=>!d.path.startsWith('roles/') && !d.path.startsWith('invites/')); // аккаунты и коды в новом проекте другие
+  const codes = []; let done = 0;
+  try{
+    for(const d of docs){
+      let data = d.data;
+      if(mode==='move' && d.path.startsWith('clientsMeta/')){
+        const cid = d.path.split('/')[1], code = await freshCode(), now = Date.now();
+        data = { ...data, uid: null, status: 'invited', code, coachUid: MY_UID, pendingCode: null };
+        delete data.acceptedAt;
+        await DB.doc('invites/'+code).set({ clientId: cid, coachUid: MY_UID, name: data.name, createdAt: now, used: false, usedBy: null });
+        codes.push({ name: data.name, code });
+      }
+      await DB.doc(d.path).set(data);
+      done++;
+      if(done % 5 === 0 || done === docs.length) prog(done + ' из ' + docs.length);
+    }
+    const list = codes.map(c=>`${c.name} — ${c.code}`).join('\n');
+    showModalHtml(`<p style="margin:0 0 6px;font-weight:600;">Готово</p>
+      <p style="font-size:12.5px;color:var(--text2);margin:0 0 8px;text-align:left;">Восстановлено документов: ${docs.length}.${codes.length ? ' Клиенты войдут заново: отправьте каждому его новый код.' : ''}</p>
+      ${codes.length ? `<div style="font-size:13px;white-space:pre-wrap;text-align:left;user-select:all;border:0.5px solid var(--border);border-radius:8px;padding:8px;">${escHtml(list)}</div>` : ''}`,
+      `<button class="modal-btn primary" onclick="hideModal()">Закрыть</button>`);
+  }catch(e){
+    console.error('restore failed', e.code, e.message);
+    showModalHtml(`<p style="margin:0 0 6px;font-weight:600;">Восстановление прервалось</p>
+      <p style="font-size:12.5px;color:var(--text2);margin:0;text-align:left;">${escHtml(errText(e))}. Часть данных могла записаться. Запустите восстановление тем же файлом ещё раз: это безопасно.</p>`,
+      `<button class="modal-btn primary" onclick="hideModal()">Закрыть</button>`);
+  }
+}
+function openBackupDialog(){
+  if(!backupAllowed()){ showToast('Резервные копии доступны тренеру и администратору на своём сервере'); return; }
+  showModalHtml(`<p style="margin:0 0 4px;font-weight:600;">Резервная копия данных</p>
+    <p style="font-size:12px;color:var(--text2);margin:0 0 10px;text-align:left;">${escHtml(lastBackupText())}. Копия — один файл со всеми клиентами, дневниками, целями и общей базой продуктов. Делайте её хотя бы раз в неделю и храните вне телефона.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="modal-btn primary" onclick="downloadBackup()">Скачать копию</button>
+      <button class="modal-btn" onclick="pickBackupFile('same')">Восстановить из файла</button>
+      <button class="modal-btn" onclick="pickBackupFile('move')">Перенос в новый проект</button>
+    </div>
+    <p id="bk-status" class="hint" style="padding:8px 0 0;min-height:16px;text-align:left;"></p>`,
+    `<button class="modal-btn" onclick="hideModal()">Закрыть</button>`);
 }
 async function freshCode(){
   for(let i=0;i<6;i++){
@@ -2193,12 +2847,14 @@ function saveCoachGoals(){
   const tolChanged = JSON.stringify(tolDraft)!==JSON.stringify(TOLERANCE);
   if((goalsChanged || tolChanged) && !goalsUnseen) goalsSeen = { GOAL: {...GOAL}, TOLERANCE: {...TOLERANCE} }; // что клиент видел до этой правки
   Object.assign(GOAL, goalDraft); Object.assign(TOLERANCE, tolDraft);
-  if(goalsChanged){
-    const today = dateText(todayISO());
-    if(GOAL_HISTORY[0] && GOAL_HISTORY[0].date===today) GOAL_HISTORY[0].goal = {...GOAL};
-    else GOAL_HISTORY.unshift({ date: today, goal: {...GOAL} });
+  if(goalsChanged || tolChanged){
+    const todayI = todayISO(), today = dateText(todayI), top = GOAL_HISTORY[0];
+    const sameDay = top && (top.from===todayI || (top.from===GOAL_EPOCH && top.date===today)); // правки в тот же день объединяем
+    if(sameDay){ top.goal = {...GOAL}; top.tol = {...TOLERANCE}; }
+    else GOAL_HISTORY.unshift({ date: today, from: todayI, goal: {...GOAL}, tol: {...TOLERANCE} });  // новые цели действуют С ЭТОГО ДНЯ, прошлые дни не пересчитываются
     // если за сегодня вернули прежние значения — запись об изменении не нужна
-    if(GOAL_HISTORY.length>1 && JSON.stringify(GOAL_HISTORY[0].goal)===JSON.stringify(GOAL_HISTORY[1].goal)) GOAL_HISTORY.shift();
+    const a1 = GOAL_HISTORY[0], b1 = GOAL_HISTORY[1];
+    if(b1 && goalsSigOf(a1.goal, a1.tol)===goalsSigOf(b1.goal, b1.tol)) GOAL_HISTORY.shift();
   }
   renderSummary(); renderWeek();
   renderTraineeCardMini();
@@ -2251,10 +2907,12 @@ function renderGoalsView(){
       <p class="section-label" style="margin-top:8px;">История изменений</p>
       ${GOAL_HISTORY.map((h,i)=>{
         const prev = GOAL_HISTORY[i+1];
-        const delta = prev ? `<b>${goalDelta(h.goal, prev.goal).join(' · ')}</b>` : '<span style="color:var(--muted);">начальные цели</span>';
+        const parts = prev ? goalDelta(h.goal, prev.goal) : [];
+        if(prev && h.tol && prev.tol){ const tp = goalDelta(h.tol, prev.tol); if(tp.length) parts.push('допуск: ' + tp.join(', ')); }
+        const delta = prev ? `<b>${parts.join(' · ')}</b>` : '<span style="color:var(--muted);">начальные цели</span>';
         return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border);">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:13px;">${h.date}${i===0?' <span class="chip on" style="padding:1px 6px;font-size:10px;margin-left:4px;">действуют</span>':''}</span>
+            <span style="font-size:13px;">${i===GOAL_HISTORY.length-1 ? 'С начала' : 'с ' + h.date}${i===0?' <span class="chip on" style="padding:1px 6px;font-size:10px;margin-left:4px;">действуют</span>':''}</span>
             <span style="font-size:12px;color:var(--muted);">${h.goal.kcal} ккал · Б${h.goal.protein} Ж${h.goal.fat} У${h.goal.carbs}</span>
           </div>
           <div style="margin-top:4px;font-size:13px;">${delta}</div>
@@ -2303,7 +2961,7 @@ function openCoachProducts(){
 }
 function setCProdTab(t){ cProdTab = t; renderCoachProducts(); }
 function renderCoachProducts(){
-  const pending = PRODUCTS.filter(p=>p.pending);
+  const pending = PRODUCTS.filter(p=>p.pending).sort(byName);
   document.getElementById('c-prod-tabs').innerHTML =
     `<span class="chip ${cProdTab==='pending'?'on':''}" onclick="setCProdTab('pending')">На модерации${pending.length?' · '+pending.length:''}</span>
      <span class="chip ${cProdTab==='all'?'on':''}" onclick="setCProdTab('all')">Все продукты</span>`;
